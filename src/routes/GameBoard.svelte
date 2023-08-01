@@ -1,25 +1,97 @@
 <script>
     // @ts-nocheck
     import { io } from "$lib/webSocketConnection.js";
+    import { Socket } from "socket.io-client";
     import { onMount } from "svelte";
     import { spring } from "svelte/motion";
 
-    let username = "";
-
+    let username = "lol";
+    let i = 0;
     let messages = [];
+    let arr = new Array();
+    let turn = "_";
+    let selectedCards;
+    let myCards;
+    let playedCards = new Array();
+    let currentCard;
 
     onMount(() => {
         io.on("name", (name) => {
             username = name;
-            console.log(name);
+        
+        });
+        io.on("cards", (distributedCards) => {
+            myCards = distributedCards;
+            arr = [
+                new URL(
+                    `../lib/images/cards/${distributedCards[0]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[1]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[2]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[3]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[4]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[5]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[6]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[7]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[8]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[9]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[10]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[11]}.png`,
+                    import.meta.url
+                ).href,
+                new URL(
+                    `../lib/images/cards/${distributedCards[12]}.png`,
+                    import.meta.url
+                ).href,
+            ];
+        });
+
+        io.on("playedCards", (data) => {
+            playedCards = data.cards;
+            console.log(data.cards)
+            turn = data.turn === username ? "Your turn" : "";
         });
     });
 
-    let distributedCards = [];
+    function distributeCards() {
+        io.emit("distributeCards", "hi");
+    }
 
-    async function distributeCards() {
+    /*     async function distributeCards() {
         const response = await fetch("/distributeCards");
-        distributedCards = await response.json();
+        //distributedCards = await response.json();
         arr = [
             new URL(
                 `../lib/images/cards/${distributedCards[0]}.png`,
@@ -78,7 +150,7 @@
                 import.meta.url
             ).href,
         ];
-    }
+    } */
 
     let active = [
         false,
@@ -93,8 +165,6 @@
         false,
     ];
     // @ts-ignore
-    let arr = [];
-    let i = 0;
 </script>
 
 <div class="game-background">
@@ -115,25 +185,49 @@
         {/each}
         <button
             on:click={() => {
-                console.log("hi");
+                selectedCards = new Array();
                 while (i < active.length) {
                     if (active[i]) {
-                        console.log(i);
+                        
+                        selectedCards.push(myCards[i]);
                     }
-
                     i++;
                 }
+                
+                if (turn === "Your turn") {
+                    console.log("emitting cards");
+                    io.emit("playedCards", selectedCards);
+                } else {
+                    console.log("stop");
+                }
+
                 i = 0;
             }}>Play Cards</button
         >
     </div>
     <button on:click={distributeCards}>distributeCards</button>
     <h1>{username}</h1>
-    <h1>{distributedCards}</h1>
+    <h1>{turn}</h1>
+
+        {#each playedCards as x, index}
+            <input
+                value={"whatsittoyah"}
+                type="image"
+                src={new URL(
+                    `../lib/images/cards/${playedCards[index]}.png`,
+                    import.meta.url
+                ).href}
+                alt=""
+                draggable="false"
+                class={"card"}
+            />
+        {/each}
+
 </div>
 
 <style>
     input {
+        max-height: 100%;
         width: auto;
         height: 7rem;
     }
