@@ -68,7 +68,7 @@ export default function injectSocketIO(server) {
             for (let i = 0; i < sequenceNumberByClient.length; i++) {
                 //socket.broadcast.to(sequenceNumberByClient[i]).emit('cards', distributedCards.splice(-13));
                 console.log(distributedCards)
-                io.to(sequenceNumberByClient[i]).emit('cards', distributedCards.splice(-13));
+                io.to(`${sequenceNumberByClient[i]}`).emit('cards', distributedCards.splice(-13));
                 //io.emit('cards', distributedCards.splice(-13))
             }
             //io.emit('distributedCards', distributedCards)
