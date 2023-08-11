@@ -8,10 +8,10 @@
     .card {
         color: green;
         background-color: #cd1818;
-        width: 3.27rem;
-        height: 4.67rem;
-        border-radius: 0.3rem;
-        border: 4px solid  #ddd7d2;
+        width: 3.27vw;
+        height: 4.67vw;
+        border-radius: 0.3vw;
+        border: .2vw solid  #ddd7d2;
         position:absolute;
     }
 </style>

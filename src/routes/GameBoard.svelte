@@ -5,93 +5,61 @@
     import { onMount } from "svelte";
     import { spring } from "svelte/motion";
     import CardBack from "./CardBack.svelte";
-    import { dynamicSort } from "./logic.svelte";
+    import {
+        dynamicSort,
+        split,
+        fieldSorter,
+        suitRank,
+        numberRank,
+        removeByAttr,
+    } from "./logic.svelte";
     let username = "lol";
-    let i = 0;
-
+    export let CODE;
     let arr = new Array();
     let turn = "_";
     let selectedCards;
-    let myCards;
     let playedCards = new Array();
 
     const sty = [
-        "transform: rotate(-20deg) translate(-6rem);",
-        "transform: rotate(-17deg) translate(-5rem);",
-        "transform: rotate(-15deg) translate(-4rem);",
-        "transform: rotate(-12deg) translate(-3rem);",
-        "transform: rotate(-10deg) translate(-2rem);",
-        "transform: rotate(-5deg) translate(-1rem);",
-        "transform: rotate(0deg) translate(0rem);",
-        "transform: rotate(5deg) translate(1rem);",
-        "transform: rotate(10deg) translate(2rem);",
-        "transform: rotate(15deg) translate(3rem);",
-        "transform: rotate(20deg) translate(4rem);",
-        "transform: rotate(25deg) translate(5rem);",
-        "transform: rotate(30deg) translate(6rem);",
-        "transform: rotate(40deg) translate(7rem);",
+        "transform: rotate(-20deg) translate(-7.5vw);",
+        "transform: rotate(-17deg) translate(-6vw);",
+        "transform: rotate(-15deg) translate(-5vw);",
+        "transform: rotate(-12deg) translate(-3.5vw);",
+        "transform: rotate(-10deg) translate(-2.5vw);",
+        "transform: rotate(-5deg) translate(-1.25vw);",
+        "transform: rotate(0deg) translate(0);",
+        "transform: rotate(5deg) translate(1.25vw);",
+        "transform: rotate(10deg) translate(2.5vw);",
+        "transform: rotate(15deg) translate(3.5vw);",
+        "transform: rotate(20deg) translate(5vw);",
+        "transform: rotate(25deg) translate(6vw);",
+        "transform: rotate(30deg) translate(7.5vw);",
+        "transform: rotate(40deg) translate(8.5vw);",
     ];
 
     onMount(() => {
+        io.emit("groupID", CODE);
+
+        io.on("groupID", (sum) => {
+            console.log(sum);
+        });
+
         io.on("name", (name) => {
             username = name;
         });
         io.on("cards", (distributedCards) => {
-            myCards = distributedCards;
-            arr = [
-                new URL(
-                    `../lib/images/cards/${distributedCards[0]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[1]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[2]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[3]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[4]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[5]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[6]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[7]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[8]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[9]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[10]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[11]}.png`,
-                    import.meta.url
-                ).href,
-                new URL(
-                    `../lib/images/cards/${distributedCards[12]}.png`,
-                    import.meta.url
-                ).href,
-            ];
+            arr = new Array();
+            for (let i = 0; i < distributedCards.length; i++) {
+                let splitted = split(distributedCards[i]);
+                arr.push({
+                    number: Number(splitted[0]),
+                    numberRank: numberRank(Number(splitted[0])),
+                    suit: splitted[1],
+                    suitRank: suitRank(splitted[1]),
+                    url: new URL(`../lib/images/cards/${distributedCards[i]}.png`,import.meta.url).href,
+                    cardName: distributedCards[i],
+                });
+            }
         });
 
         io.on("playedCards", (data) => {
@@ -102,126 +70,75 @@
     });
 
     function distributeCards() {
-        io.emit("distributeCards", "hi");
+        io.emit("distributeCards", `/game/${CODE}`);
     }
 
-    /*     async function distributeCards() {
-        const response = await fetch("/distributeCards");
-        //distributedCards = await response.json();
-        arr = [
-            new URL(
-                `../lib/images/cards/${distributedCards[0]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[1]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[2]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[3]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[4]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[5]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[6]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[7]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[8]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[9]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[10]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[11]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[12]}.png`,
-                import.meta.url
-            ).href,
-            new URL(
-                `../lib/images/cards/${distributedCards[13]}.png`,
-                import.meta.url
-            ).href,
-        ];
-    } */
-
-    let active = [
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-        false,
-    ];
+    let isActive = new Array();
     // @ts-ignore
 </script>
 
 <div class="game-background">
     <div class={"row-of-cards"}>
-        {#each arr as x, index}
+        {#each arr as card, index (card.url)}
             <input
                 value={"whatsittoyah"}
                 type="image"
-                src={arr[index]}
+                src={card.url}
                 alt=""
                 draggable="false"
                 class={"card"}
-                class:isSelected={active[index]}
+                class:isSelected={isActive.includes(index)}
                 on:click={() => {
-                    active[index] = !active[index];
+                    if (isActive.includes(index)) {
+                        isActive = isActive.filter((item) => item !== index);
+                        arr = arr;
+                    } else {
+                        isActive.push(index);
+                        arr = arr;
+                    }
                 }}
             />
         {/each}
-        <button
-            on:click={() => {
-                selectedCards = new Array();
-                while (i < active.length) {
-                    if (active[i]) {
-                        selectedCards.push(myCards[i]);
-                    }
-                    i++;
-                }
 
+        <button
+            on:click={async () => {
+                selectedCards = new Array();
                 if (turn === "Your turn") {
-                    console.log("emitting cards");
+                    isActive.sort();
+                    let i = isActive.length - 1;
+                    while (i >= 0) {
+                        selectedCards.push(arr[isActive[i]].cardName);
+                        removeByAttr(
+                            arr,
+                            "cardName",
+                            arr[isActive[i]].cardName
+                        );
+                        i--;
+                    }
+                    arr = arr;
                     io.emit("playedCards", selectedCards);
+                    isActive = new Array();
                 } else {
                     console.log("stop");
                 }
-
-                i = 0;
             }}>Play Cards</button
         >
     </div>
     <button on:click={distributeCards}>distributeCards</button>
-    <button on:click={()=>console.log('hi')}>sort</button>
+    <button
+        on:click={() => {
+            arr.sort(fieldSorter(["suitRank", "numberRank"]));
+            arr = arr;
+            console.log(arr);
+        }}>Suit Sort</button
+    >
+
+    <button
+        on:click={() => {
+            arr.sort(fieldSorter(["numberRank", "suitRank"]));
+            arr = arr;
+        }}>Number Sort</button
+    >
 
     <div
         style="margin:5rem; position:absolute;transform:rotate(100deg);left:5rem;top:10rem;"
@@ -261,52 +178,74 @@
 <style>
     input {
         width: auto;
-        height: 7rem;
+        height: 7vw; /* Use viewport width */
     }
+
     img {
         width: auto;
-        height: 7rem;
-        margin: 0.5rem;
+        height: 7vw; /* Use viewport width */
+        margin: 1vw; /* Use viewport width */
     }
 
     .isSelected {
-        margin-bottom: 1rem;
+        margin-bottom: 2vh; /* Use viewport height */
         border-color: yellow;
-        border-width: 10px;
+        border-width: 2vw; /* Use viewport width */
     }
+
     .playedCards {
         margin: auto;
-        padding: 10px;
+        padding: 2vh; /* Use viewport height */
         display: flex;
         justify-content: center;
         align-items: center;
         grid-column: 1;
-        grid-template-columns: 50px 50px;
+        grid-template-columns: 15vw 15vw; /* Use viewport width */
     }
+
     .card {
-        margin-right: 1rem;
+        margin-right: 1vw; /* Use viewport width */
     }
+
     .card:hover {
-        margin-bottom: 1rem;
+        margin-bottom: 2vh; /* Use viewport height */
         border-color: blueviolet;
-        border-width: 5px;
+        border-width: 1vw; /* Use viewport width */
         border: #ff3e00;
     }
+
     .row-of-cards {
         grid-column: 1;
-        grid-template-columns: 50px 50px;
+        grid-template-columns: repeat(
+            auto-fit,
+            minmax(5vw, 1fr)
+        ); /* Use viewport width */
         bottom: 0;
         position: absolute;
-        margin: 1rem;
+        margin: 1vw; /* Use viewport width */
     }
 
     .game-background {
         position: absolute;
-        width: 90%;
-        height: 80%;
+        width: 90vw; /* Use viewport width */
+        height: 80vh; /* Use viewport height */
         background-color: green;
-        border: 1rem solid brown;
-        border-radius: 5rem;
-        padding: 1rem;
+        border: 2vw solid brown; /* Use viewport width */
+        border-radius: 5vw; /* Use viewport width */
+        padding: 2vw; /* Use viewport width */
+    }
+
+    @media (max-width: 768px) {
+        /* Adjust styles for smaller screens */
+        .playedCards {
+            grid-template-columns: 1fr;
+        }
+
+        .row-of-cards {
+            grid-template-columns: repeat(
+                auto-fit,
+                minmax(3vw, 1fr)
+            ); /* Use viewport width */
+        }
     }
 </style>

@@ -27,21 +27,38 @@ export default function injectSocketIO(server) {
             next();
         }); */
 
+    //dynamic namespace connection for game
+    const chatNamespace = io.of('/game');
+
+    chatNamespace.on('connection', (socket) => {
+        console.log('A user connected to chat namespace');
+    })
+
+
     io.on('connection', (socket) => {
         let username = `User ${Math.round(Math.random() * 999999)}`;
-
-        socket.join(socket.id);
+        //socket.join(socket.id);
         sequenceNumberByClient.push(socket.id);
-        console.log(sequenceNumberByClient)
+        console.log(sequenceNumberByClient);
+
         socket.on("disconnect", () => {
             sequenceNumberByClient.pop(socket.id)
             console.info(`Client gone [id=${socket.id}]`);
         });
 
-        /*         socket.emit("session", {
-                    sessionID: socket.sessionID,
-                    userID: socket.userID,
-                }); */
+
+        socket.on('groupID', CODE => {
+            socket.join(CODE)
+//            console.log(socket.id, ' joined group named:', CODE)
+            io.to(CODE).emit('groupID', 'Welcome to group')
+/*             io.to(CODE).emit('playedCards', {
+                cards: 'none',
+                turn: sequenceNumberByClient[0]
+            }) */
+
+
+
+        })
 
         socket.emit('name', socket.id);
         socket.emit('playedCards', {
@@ -49,29 +66,24 @@ export default function injectSocketIO(server) {
             turn: sequenceNumberByClient[0]
         })
 
-        socket.on('message', (message) => {
-            io.emit('message', {
-                from: username,
-                message: message,
-                time: new Date().toLocaleString()
-            });
-        });
-
         socket.on('playedCards', (card) => {
             console.log(card)
             io.emit('playedCards', { cards: card, turn: sequenceNumberByClient[0] })
         })
 
         let distributedCards;
-        socket.on('distributeCards', async (cards) => {
+        socket.on('distributeCards', async (code) => {
             distributedCards = await shuffle()
+
             for (let i = 0; i < sequenceNumberByClient.length; i++) {
-                //socket.broadcast.to(sequenceNumberByClient[i]).emit('cards', distributedCards.splice(-13));
                 console.log(distributedCards)
-                io.to(`${sequenceNumberByClient[i]}`).emit('cards', distributedCards.splice(-13));
-                //io.emit('cards', distributedCards.splice(-13))
+                let user = io.sockets.sockets.get(sequenceNumberByClient[i])
+                if (user) {
+                    user.emit('cards', distributedCards.splice(-13));
+                }
+
             }
-            //io.emit('distributedCards', distributedCards)
+
 
         })
     });
