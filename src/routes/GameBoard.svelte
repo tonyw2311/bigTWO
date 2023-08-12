@@ -6,19 +6,22 @@
     import { spring } from "svelte/motion";
     import CardBack from "./CardBack.svelte";
     import {
-        dynamicSort,
         split,
         fieldSorter,
         suitRank,
         numberRank,
         removeByAttr,
     } from "./logic.svelte";
+
+    import { cardComparer } from "../components/gameLogic.svelte";
     let username = "lol";
     export let CODE;
     let arr = new Array();
-    let turn = "_";
+    let turn;
+    let turnPlayer;
     let selectedCards;
-    let playedCards = new Array();
+    let playedCards;
+    let players = new Array();
 
     const sty = [
         "transform: rotate(-20deg) translate(-7.5vw);",
@@ -40,6 +43,10 @@
     onMount(() => {
         io.emit("groupID", CODE);
 
+        io.on("players", (playerArr) => {
+            players = playerArr;
+            //players = players
+        });
         io.on("groupID", (sum) => {
             console.log(sum);
         });
@@ -67,9 +74,8 @@
 
         io.on("playedCards", (data) => {
             playedCards = data.cards;
-            console.log(data.cards);
-            console.log(data.turn);
-            turn = data.turn === username ? "Your turn" : "";
+            turn = data.turn === username;
+            turnPlayer = data.turn;
             turn = turn;
         });
     });
@@ -108,24 +114,58 @@
         <button
             on:click={() => {
                 selectedCards = new Array();
-                if (turn === "Your turn") {
+                if (turn) {
                     isActive.sort();
                     let i = isActive.length - 1;
                     while (i >= 0) {
-                        selectedCards.push(arr[isActive[i]].cardName);
-                        removeByAttr(
-                            arr,
-                            "cardName",
-                            arr[isActive[i]].cardName
-                        );
+                        selectedCards.push(arr[isActive[i]]);
                         i--;
                     }
-                    arr = arr;
+
+                    console.log(typeof playedCards);
+                    if (!playedCards) {
+                        io.emit("playedCards", {
+                            cards: selectedCards,
+                            code: CODE,
+                            user: username,
+                        });
+
+                        i = isActive.length - 1;
+                        while (i >= 0) {
+                            removeByAttr(
+                                arr,
+                                "cardName",
+                                arr[isActive[i]].cardName
+                            );
+                            i--;
+                        }
+                    } else if (cardComparer(playedCards, selectedCards)) {
+                        console.log("Passed Card comparer");
+                        io.emit("playedCards", {
+                            cards: selectedCards,
+                            code: CODE,
+                            user: username,
+                        });
+                        i = isActive.length - 1;
+                        while (i >= 0) {
+                            removeByAttr(
+                                arr,
+                                "cardName",
+                                arr[isActive[i]].cardName
+                            );
+                            i--;
+                        }
+                    } else {
+                        console.log("Failed Card comparer");
+                    }
+
+                    //if ( cardComparer({},{}))
+                    /*                     arr = arr;
                     io.emit("playedCards", {
                         cards: selectedCards,
                         code: CODE,
                         user: username,
-                    });
+                    }); */
                     isActive = new Array();
                 } else {
                     console.log("stop");
@@ -165,22 +205,29 @@
         {/each}
     </div>
 
-    <h1>{username}</h1>
-    <h1>{turn}</h1>
+    {#each players as player, index}
+        <h2 style={"text-align:center"}>
+            {turnPlayer === player ? "> " : ""}{player}{player === username
+                ? " (You)"
+                : ""}
+        </h2>
+    {/each}
 
     <div class="playedCards">
-        {#each playedCards as x, index}
-            <img
-                value={"whatsittoyah"}
-                type="image"
-                src={new URL(
-                    `../lib/images/cards/${playedCards[index]}.png`,
-                    import.meta.url
-                ).href}
-                alt=""
-                draggable="false"
-            />
-        {/each}
+        {#if playedCards}
+            {#each playedCards as x, index}
+                <img
+                    value={"whatsittoyah"}
+                    type="image"
+                    src={new URL(
+                        `../lib/images/cards/${playedCards[index].cardName}.png`,
+                        import.meta.url
+                    ).href}
+                    alt=""
+                    draggable="false"
+                />
+            {/each}
+        {/if}
     </div>
 </div>
 

@@ -10,29 +10,23 @@ export default function injectSocketIO(server) {
 
     // Event listener for new connections to the main namespace
     io.on('connection', (socket) => {
-        // Add the client's socket ID to the sequenceNumberByClient array
-        sequenceNumberByClient.push(socket.id);
-        console.log(sequenceNumberByClient);
-
-        // Event listener for when a client disconnects
-        socket.on("disconnect", () => {
-            // Remove the client's socket ID from the sequenceNumberByClient array
-            sequenceNumberByClient.pop(socket.id);
-            console.info(`Client gone [id=${socket.id}]`);
-        });
+        socket.emit('name', socket.id);
 
         // Event listener for 'groupID' message from a client
         socket.on('groupID', CODE => {
             // Check if the room with the given CODE exists
-            if (io.sockets.adapter.rooms.get(CODE)) {
+            let room = io.sockets.adapter.rooms.get(CODE)
+            if (room) {
                 // Check if the room is not full (max 4 clients)
-                if (io.sockets.adapter.rooms.get(CODE).size < 4) {
+                if (room.size < 4) {
                     socket.join(CODE); // Add the client to the room
+                    io.to(CODE).emit('players', Array.from(room))
                 } else {
                     let user = io.sockets.sockets.get(socket.id);
                     if (user) {
                         // If room is full, emit a message to the client
                         user.emit('groupID', 'Room is full');
+                        io.to(CODE).emit('players', Array.from(room))
                     }
                 }
             } else {
@@ -40,37 +34,34 @@ export default function injectSocketIO(server) {
             }
         });
 
+        socket.on('playedCards', (data) => {
+            let players = Array.from(io.sockets.adapter.rooms.get(data.code))
+            let currentIndex = players.indexOf(data.user);
+            let nextIndex = ++currentIndex % players.length
+            console.log(players)
+            io.to(data.code).emit('playedCards', { cards: data.cards, turn: players[nextIndex] })
+        })
 
-    socket.emit('name', socket.id);
-    socket.emit('playedCards', {
-        cards: 'none',
-        turn: sequenceNumberByClient[0]
-    })
 
-    socket.on('playedCards', (data) => {
-        let players = Array.from(io.sockets.adapter.rooms.get(data.code))
-        let currentIndex = players.indexOf(data.user);
-        let nextIndex = ++currentIndex % players.length
-        console.log(players)
-        io.to(data.code).emit('playedCards', { cards: data.cards, turn: players[nextIndex] })
-    })
+        socket.on('distributeCards', async (code) => {
+            let players = Array.from(io.sockets.adapter.rooms.get(code))
+            let distributedCards = await shuffle()
+            io.to(code).emit('playedCards', {
+                cards: null,
+                turn: players[0]
+            })
 
-    let distributedCards;
-    let players;
-    socket.on('distributeCards', async (code) => {
-        distributedCards = await shuffle()
-        players = Array.from(io.sockets.adapter.rooms.get(code))
-        for (let i = 0; i < Math.min(4, players.length); i++) {
-            console.log(distributedCards)
-            let user = io.sockets.sockets.get(players[i])
-            if (user) {
-                user.emit('cards', distributedCards.splice(-13));
+            for (let i = 0; i < Math.min(4, players.length); i++) {
+                console.log(distributedCards)
+                let user = io.sockets.sockets.get(players[i])
+                if (user) {
+                    user.emit('cards', distributedCards.splice(-13));
+                }
             }
-        }
-    })
-});
+        })
+    });
 
-console.log('SocketIO injected');
+    console.log('SocketIO injected');
 }
 
 async function shuffle() {
