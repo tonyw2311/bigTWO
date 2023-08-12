@@ -1,94 +1,76 @@
+// Import the Server class from the 'socket.io' library
 import { Server } from 'socket.io';
 
+// Export a function that injects Socket.IO into the provided server instance
 export default function injectSocketIO(server) {
+    // Create a new instance of the Socket.IO server using the provided HTTP server
     const io = new Server(server);
+    // Initialize an array to store sequence numbers associated with clients
     let sequenceNumberByClient = new Array();
 
-    /*     io.use((socket, next) => {
-            const sessionID = socket.handshake.auth.sessionID;
-            if (sessionID) {
-                // find existing session
-                const session = sessionStore.findSession(sessionID);
-                if (session) {
-                    socket.sessionID = sessionID;
-                    socket.userID = session.userID;
-                    socket.username = session.username;
-                    return next();
-                }
-            }
-            const username = socket.handshake.auth.username;
-            if (!username) {
-                return next(new Error("invalid username"));
-            }
-            // create new session
-            socket.sessionID = randomId();
-            socket.userID = randomId();
-            socket.username = username;
-            next();
-        }); */
-
-    //dynamic namespace connection for game
-    const chatNamespace = io.of('/game');
-
-    chatNamespace.on('connection', (socket) => {
-        console.log('A user connected to chat namespace');
-    })
-
-
+    // Event listener for new connections to the main namespace
     io.on('connection', (socket) => {
-        let username = `User ${Math.round(Math.random() * 999999)}`;
-        //socket.join(socket.id);
+        // Add the client's socket ID to the sequenceNumberByClient array
         sequenceNumberByClient.push(socket.id);
         console.log(sequenceNumberByClient);
 
+        // Event listener for when a client disconnects
         socket.on("disconnect", () => {
-            sequenceNumberByClient.pop(socket.id)
+            // Remove the client's socket ID from the sequenceNumberByClient array
+            sequenceNumberByClient.pop(socket.id);
             console.info(`Client gone [id=${socket.id}]`);
         });
 
-
+        // Event listener for 'groupID' message from a client
         socket.on('groupID', CODE => {
-            socket.join(CODE)
-//            console.log(socket.id, ' joined group named:', CODE)
-            io.to(CODE).emit('groupID', 'Welcome to group')
-/*             io.to(CODE).emit('playedCards', {
-                cards: 'none',
-                turn: sequenceNumberByClient[0]
-            }) */
-
-
-
-        })
-
-        socket.emit('name', socket.id);
-        socket.emit('playedCards', {
-            cards: 'none',
-            turn: sequenceNumberByClient[0]
-        })
-
-        socket.on('playedCards', (card) => {
-            console.log(card)
-            io.emit('playedCards', { cards: card, turn: sequenceNumberByClient[0] })
-        })
-
-        let distributedCards;
-        socket.on('distributeCards', async (code) => {
-            distributedCards = await shuffle()
-
-            for (let i = 0; i < sequenceNumberByClient.length; i++) {
-                console.log(distributedCards)
-                let user = io.sockets.sockets.get(sequenceNumberByClient[i])
-                if (user) {
-                    user.emit('cards', distributedCards.splice(-13));
+            // Check if the room with the given CODE exists
+            if (io.sockets.adapter.rooms.get(CODE)) {
+                // Check if the room is not full (max 4 clients)
+                if (io.sockets.adapter.rooms.get(CODE).size < 4) {
+                    socket.join(CODE); // Add the client to the room
+                } else {
+                    let user = io.sockets.sockets.get(socket.id);
+                    if (user) {
+                        // If room is full, emit a message to the client
+                        user.emit('groupID', 'Room is full');
+                    }
                 }
-
+            } else {
+                socket.join(CODE); // Create the room and add the client to it
             }
+        });
 
 
-        })
-    });
+    socket.emit('name', socket.id);
+    socket.emit('playedCards', {
+        cards: 'none',
+        turn: sequenceNumberByClient[0]
+    })
 
-    console.log('SocketIO injected');
+    socket.on('playedCards', (data) => {
+        let players = Array.from(io.sockets.adapter.rooms.get(data.code))
+        let currentIndex = players.indexOf(data.user);
+        let nextIndex = ++currentIndex % players.length
+        console.log(players)
+        io.to(data.code).emit('playedCards', { cards: data.cards, turn: players[nextIndex] })
+    })
+
+    let distributedCards;
+    let players;
+    socket.on('distributeCards', async (code) => {
+        distributedCards = await shuffle()
+        players = Array.from(io.sockets.adapter.rooms.get(code))
+        for (let i = 0; i < Math.min(4, players.length); i++) {
+            console.log(distributedCards)
+            let user = io.sockets.sockets.get(players[i])
+            if (user) {
+                user.emit('cards', distributedCards.splice(-13));
+            }
+        }
+    })
+});
+
+console.log('SocketIO injected');
 }
 
 async function shuffle() {

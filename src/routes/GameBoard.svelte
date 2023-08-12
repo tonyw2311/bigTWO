@@ -56,7 +56,10 @@
                     numberRank: numberRank(Number(splitted[0])),
                     suit: splitted[1],
                     suitRank: suitRank(splitted[1]),
-                    url: new URL(`../lib/images/cards/${distributedCards[i]}.png`,import.meta.url).href,
+                    url: new URL(
+                        `../lib/images/cards/${distributedCards[i]}.png`,
+                        import.meta.url
+                    ).href,
                     cardName: distributedCards[i],
                 });
             }
@@ -65,12 +68,14 @@
         io.on("playedCards", (data) => {
             playedCards = data.cards;
             console.log(data.cards);
+            console.log(data.turn);
             turn = data.turn === username ? "Your turn" : "";
+            turn = turn;
         });
     });
 
     function distributeCards() {
-        io.emit("distributeCards", `/game/${CODE}`);
+        io.emit("distributeCards", CODE);
     }
 
     let isActive = new Array();
@@ -101,7 +106,7 @@
         {/each}
 
         <button
-            on:click={async () => {
+            on:click={() => {
                 selectedCards = new Array();
                 if (turn === "Your turn") {
                     isActive.sort();
@@ -116,7 +121,11 @@
                         i--;
                     }
                     arr = arr;
-                    io.emit("playedCards", selectedCards);
+                    io.emit("playedCards", {
+                        cards: selectedCards,
+                        code: CODE,
+                        user: username,
+                    });
                     isActive = new Array();
                 } else {
                     console.log("stop");
