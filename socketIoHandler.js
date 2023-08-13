@@ -34,12 +34,13 @@ export default function injectSocketIO(server) {
             }
         });
 
+        let players;
         socket.on('playedCards', (data) => {
-            let players = Array.from(io.sockets.adapter.rooms.get(data.code))
+            players = Array.from(io.sockets.adapter.rooms.get(data.code))
             let currentIndex = players.indexOf(data.user);
             let nextIndex = ++currentIndex % players.length
             console.log(players)
-            io.to(data.code).emit('playedCards', { cards: data.cards, turn: players[nextIndex] })
+            io.to(data.code).emit('playedCards', { cards: data.cards, turn: players[nextIndex], skippedTurn:data.skippedTurn })
         })
 
 

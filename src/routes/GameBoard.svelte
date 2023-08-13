@@ -1,5 +1,6 @@
 <script>
     // @ts-nocheck
+    import "./styles.css";
     import { io } from "$lib/webSocketConnection.js";
     import { Socket } from "socket.io-client";
     import { onMount } from "svelte";
@@ -13,7 +14,9 @@
         removeByAttr,
     } from "./logic.svelte";
 
-    import { cardComparer } from "../components/gameLogic.svelte";
+    import Button from "../components/Button.svelte";
+
+    import { cardComparer, isValid } from "../components/gameLogic.svelte";
     let username = "lol";
     export let CODE;
     let arr = new Array();
@@ -22,6 +25,8 @@
     let selectedCards;
     let playedCards;
     let players = new Array();
+    let skippedTurn = 0;
+    import PlayerBox from "../components/PlayerBox.svelte";
 
     const sty = [
         "transform: rotate(-20deg) translate(-7.5vw);",
@@ -77,6 +82,7 @@
             turn = data.turn === username;
             turnPlayer = data.turn;
             turn = turn;
+            skippedTurn = data.skippedTurn;
         });
     });
 
@@ -84,94 +90,117 @@
         io.emit("distributeCards", CODE);
     }
 
+    function skipTurn() {
+        io.emit("playedCards", {
+            cards: playedCards,
+            code: CODE,
+            user: username,
+            skippedTurn: skippedTurn + 1,
+        });
+    }
+
     let isActive = new Array();
     // @ts-ignore
 </script>
 
 <div class="game-background">
-    <div class={"row-of-cards"}>
-        {#each arr as card, index (card.url)}
-            <input
-                value={"whatsittoyah"}
-                type="image"
-                src={card.url}
-                alt=""
-                draggable="false"
-                class={"card"}
-                class:isSelected={isActive.includes(index)}
-                on:click={() => {
-                    if (isActive.includes(index)) {
-                        isActive = isActive.filter((item) => item !== index);
-                        arr = arr;
-                    } else {
-                        isActive.push(index);
-                        arr = arr;
-                    }
-                }}
-            />
-        {/each}
-
-        <button
-            on:click={() => {
-                selectedCards = new Array();
-                if (turn) {
-                    isActive.sort();
-                    let i = isActive.length - 1;
-                    while (i >= 0) {
-                        selectedCards.push(arr[isActive[i]]);
-                        i--;
-                    }
-
-                    console.log(typeof playedCards);
-                    if (!playedCards) {
-                        io.emit("playedCards", {
-                            cards: selectedCards,
-                            code: CODE,
-                            user: username,
-                        });
-
-                        i = isActive.length - 1;
-                        while (i >= 0) {
-                            removeByAttr(
-                                arr,
-                                "cardName",
-                                arr[isActive[i]].cardName
+    <div class="bottom-row">
+        <div class={"row-of-cards"}>
+            {#each arr as card, index (card.url)}
+                <input
+                    value={"whatsittoyah"}
+                    type="image"
+                    src={card.url}
+                    alt=""
+                    draggable="false"
+                    class={"card"}
+                    class:isSelected={isActive.includes(index)}
+                    on:click={() => {
+                        if (isActive.includes(index)) {
+                            isActive = isActive.filter(
+                                (item) => item !== index
                             );
-                            i--;
+                            arr = arr;
+                        } else {
+                            isActive.push(index);
+                            arr = arr;
                         }
-                    } else if (cardComparer(playedCards, selectedCards)) {
-                        console.log("Passed Card comparer");
-                        io.emit("playedCards", {
-                            cards: selectedCards,
-                            code: CODE,
-                            user: username,
-                        });
-                        i = isActive.length - 1;
-                        while (i >= 0) {
-                            removeByAttr(
-                                arr,
-                                "cardName",
-                                arr[isActive[i]].cardName
-                            );
-                            i--;
-                        }
-                    } else {
-                        console.log("Failed Card comparer");
-                    }
+                    }}
+                />
+            {/each}
+            <span style="display:flex;grid-rows-template:1fr 1fr">
+                <button
+                    on:click={() => {
+                        selectedCards = new Array();
+                        if (turn) {
+                            isActive.sort();
+                            let i = isActive.length - 1;
+                            while (i >= 0) {
+                                selectedCards.push(arr[isActive[i]]);
+                                i--;
+                            }
 
-                    //if ( cardComparer({},{}))
-                    /*                     arr = arr;
+                            console.log(typeof playedCards);
+                            if (
+                                !playedCards ||
+                                skippedTurn === players.length - 1
+                            ) {
+                                console.log("null or skipped");
+                                io.emit("playedCards", {
+                                    cards: selectedCards,
+                                    code: CODE,
+                                    skippedTurn: 0,
+                                    user: username,
+                                });
+
+                                i = isActive.length - 1;
+                                while (i >= 0) {
+                                    removeByAttr(
+                                        arr,
+                                        "cardName",
+                                        arr[isActive[i]].cardName
+                                    );
+                                    i--;
+                                }
+                            } else if (
+                                cardComparer(playedCards, selectedCards)
+                            ) {
+                                console.log("Passed Card comparer");
+                                io.emit("playedCards", {
+                                    cards: selectedCards,
+                                    code: CODE,
+                                    user: username,
+                                    skippedTurn: 0,
+                                });
+                                i = isActive.length - 1;
+                                while (i >= 0) {
+                                    removeByAttr(
+                                        arr,
+                                        "cardName",
+                                        arr[isActive[i]].cardName
+                                    );
+                                    i--;
+                                }
+                            } else {
+                                console.log("Failed Card comparer");
+                            }
+
+                            //if ( cardComparer({},{}))
+                            /*                     arr = arr;
                     io.emit("playedCards", {
                         cards: selectedCards,
                         code: CODE,
                         user: username,
                     }); */
-                    isActive = new Array();
-                } else {
-                    console.log("stop");
-                }
-            }}>Play Cards</button
-        >
+                            isActive = new Array();
+                        } else {
+                            console.log("stop");
+                        }
+                    }}>Play Cards</button
+                >
+                <button on:click={skipTurn}>Skip Turn</button>
+            </span>
+        </div>
     </div>
     <button on:click={distributeCards}>distributeCards</button>
     <button
@@ -204,14 +233,19 @@
             <CardBack style={sty[i]} />
         {/each}
     </div>
-
-    {#each players as player, index}
+    <PlayerBox
+        {players}
+        {turnPlayer}
+        {username}
+        style={"right:1vw;position:absolute;top:1vw"}
+    />
+    <!--     {#each players as player, index}
         <h2 style={"text-align:center"}>
             {turnPlayer === player ? "> " : ""}{player}{player === username
                 ? " (You)"
                 : ""}
         </h2>
-    {/each}
+    {/each} -->
 
     <div class="playedCards">
         {#if playedCards}
@@ -248,7 +282,12 @@
         border-color: yellow;
         border-width: 2vw; /* Use viewport width */
     }
-
+    .bottom-row {
+        position: absolute;
+        bottom: 0;
+        display: flex;
+        flex-direction: row;
+    }
     .playedCards {
         margin: auto;
         padding: 2vh; /* Use viewport height */
@@ -257,6 +296,7 @@
         align-items: center;
         grid-column: 1;
         grid-template-columns: 15vw 15vw; /* Use viewport width */
+        position: absolute;
     }
 
     .card {
@@ -277,7 +317,7 @@
             minmax(5vw, 1fr)
         ); /* Use viewport width */
         bottom: 0;
-        position: absolute;
+        position: relative;
         margin: 1vw; /* Use viewport width */
     }
 
@@ -285,10 +325,10 @@
         position: absolute;
         width: 90vw; /* Use viewport width */
         height: 80vh; /* Use viewport height */
-        background-color: green;
-        border: 2vw solid brown; /* Use viewport width */
-        border-radius: 5vw; /* Use viewport width */
-        padding: 2vw; /* Use viewport width */
+        border: 2vw solid var(--game-border); /* Use viewport width */
+        border-radius: 3vw; /* Use viewport width */
+        background: var(--game-background);
+        padding: 1vw; /* Use viewport width */
     }
 
     @media (max-width: 768px) {

@@ -1,5 +1,6 @@
 <script>
     let buttonProps = $$restProps.style;
+   // import './styles.css'
 </script>
 
 <div class="card" style={buttonProps} />
@@ -7,7 +8,7 @@
 <style>
     .card {
         color: green;
-        background-color: #cd1818;
+        background-color: var(--cardred);
         width: 3.27vw;
         height: 4.67vw;
         border-radius: 0.3vw;

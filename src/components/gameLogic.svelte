@@ -3,7 +3,7 @@
     import { dynamicSort } from "../routes/logic.svelte";
 
     export function cardComparer(prevCards, nextCards) {
-        if (prevCards===null) return true
+        if (prevCards === null) return true;
         if (prevCards.length !== nextCards.length) {
             return false;
         } else if (prevCards.length < 5) {
@@ -11,6 +11,12 @@
         } else if (prevCards.length === 5) {
             return fiveCardCompare(prevCards, nextCards);
         }
+        return false;
+    }
+
+    export function isValid(card) {
+        if (allEqualNumbers(card)) return true;
+        else if (fiveCardRank(card) !== 0) return true;
         return false;
     }
 
