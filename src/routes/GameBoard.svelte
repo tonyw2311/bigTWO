@@ -15,18 +15,20 @@
     } from "./logic.svelte";
 
     import Button from "../components/Button.svelte";
-
+    import PlayerBox from "../components/PlayerBox.svelte";
     import { cardComparer, isValid } from "../components/gameLogic.svelte";
     let username = "lol";
     export let CODE;
     let arr = new Array();
-    let turn;
+    let turn = false;
     let turnPlayer;
+    let isShown = true;
     let selectedCards;
     let playedCards;
     let players = new Array();
     let skippedTurn = 0;
-    import PlayerBox from "../components/PlayerBox.svelte";
+    let yourName = "";
+    let nameArr;
 
     const sty = [
         "transform: rotate(-20deg) translate(-7.5vw);",
@@ -58,6 +60,14 @@
 
         io.on("name", (name) => {
             username = name;
+        });
+        io.on("set-your-name", (data) => {
+            console.log("hi");
+            console.log(data.username + "hi");
+            nameArr = data.arr;
+            if (data.username === username) {
+                isShown = false;
+            }
         });
         io.on("cards", (distributedCards) => {
             arr = new Array();
@@ -99,124 +109,153 @@
         });
     }
 
+    function setYourName() {
+        io.emit("set-your-name", {
+            name: yourName,
+            username: username,
+            CODE,
+        });
+    }
+
+    function isEmpty(input) {
+        input = input.replace(/ /g, "");
+        return input == "";
+    }
+
     let isActive = new Array();
-    // @ts-ignore
 </script>
 
+<div class={isShown ? "modalShown" : ""} />
 <div class="game-background">
-    <div class="bottom-row">
-        <div class={"row-of-cards"}>
-            {#each arr as card, index (card.url)}
-                <input
-                    value={"whatsittoyah"}
-                    type="image"
-                    src={card.url}
-                    alt=""
-                    draggable="false"
-                    class={"card"}
-                    class:isSelected={isActive.includes(index)}
-                    on:click={() => {
-                        if (isActive.includes(index)) {
-                            isActive = isActive.filter(
-                                (item) => item !== index
-                            );
-                            arr = arr;
-                        } else {
-                            isActive.push(index);
-                            arr = arr;
-                        }
-                    }}
-                />
-            {/each}
-            <span style="display:flex;grid-rows-template:1fr 1fr">
-                <button
-                    on:click={() => {
-                        selectedCards = new Array();
-                        if (turn) {
-                            isActive.sort();
-                            let i = isActive.length - 1;
+
+    <div
+        class="modal"
+        style={isShown ? "visibility:shown" : "visibility:hidden"}
+    >
+        <input
+            style={"margin:20px"}
+            maxlength="20"
+            placeholder="Your name"
+            bind:value={yourName}
+            required
+        />
+        <Button on:click={setYourName} disabled={isEmpty(yourName)}>Join</Button
+        >
+    </div>
+
+    <div class={"row-of-cards"}>
+        {#each arr as card, index (card.url)}
+            <input
+                value={"whatsittoyah"}
+                type="image"
+                src={card.url}
+                alt=""
+                draggable="false"
+                class={"card"}
+                class:isSelected={isActive.includes(index)}
+                on:click={() => {
+                    if (isActive.includes(index)) {
+                        isActive = isActive.filter((item) => item !== index);
+                        arr = arr;
+                    } else {
+                        isActive.push(index);
+                        arr = arr;
+                    }
+                }}
+            />
+        {/each}
+    </div>
+
+    <span style={"display:grid;right:0;bottom:0;position:absolute; "}>
+        <Button
+            disabled={!turn}
+            on:click={() => {
+                selectedCards = new Array();
+                if (turn) {
+                    isActive.sort();
+                    let i = isActive.length - 1;
+                    while (i >= 0) {
+                        selectedCards.push(arr[isActive[i]]);
+                        i--;
+                    }
+
+                    console.log(typeof playedCards);
+                    if (!playedCards || skippedTurn === players.length - 1) {
+                        if (isValid(selectedCards)) {
+                            console.log("null or skipped");
+                            io.emit("playedCards", {
+                                cards: selectedCards,
+                                code: CODE,
+                                skippedTurn: 0,
+                                user: username,
+                            });
+                            i = isActive.length - 1;
                             while (i >= 0) {
-                                selectedCards.push(arr[isActive[i]]);
+                                removeByAttr(
+                                    arr,
+                                    "cardName",
+                                    arr[isActive[i]].cardName
+                                );
                                 i--;
                             }
-
-                            console.log(typeof playedCards);
-                            if (
-                                !playedCards ||
-                                skippedTurn === players.length - 1
-                            ) {
-                                console.log("null or skipped");
-                                io.emit("playedCards", {
-                                    cards: selectedCards,
-                                    code: CODE,
-                                    skippedTurn: 0,
-                                    user: username,
-                                });
-
-                                i = isActive.length - 1;
-                                while (i >= 0) {
-                                    removeByAttr(
-                                        arr,
-                                        "cardName",
-                                        arr[isActive[i]].cardName
-                                    );
-                                    i--;
-                                }
-                            } else if (
-                                cardComparer(playedCards, selectedCards)
-                            ) {
-                                console.log("Passed Card comparer");
-                                io.emit("playedCards", {
-                                    cards: selectedCards,
-                                    code: CODE,
-                                    user: username,
-                                    skippedTurn: 0,
-                                });
-                                i = isActive.length - 1;
-                                while (i >= 0) {
-                                    removeByAttr(
-                                        arr,
-                                        "cardName",
-                                        arr[isActive[i]].cardName
-                                    );
-                                    i--;
-                                }
-                            } else {
-                                console.log("Failed Card comparer");
-                            }
-
-                            //if ( cardComparer({},{}))
-                            /*                     arr = arr;
-                    io.emit("playedCards", {
-                        cards: selectedCards,
-                        code: CODE,
-                        user: username,
-                    }); */
-                            isActive = new Array();
-                        } else {
-                            console.log("stop");
                         }
-                    }}>Play Cards</button
-                >
-                <button on:click={skipTurn}>Skip Turn</button>
-            </span>
-        </div>
-    </div>
-    <button on:click={distributeCards}>distributeCards</button>
-    <button
-        on:click={() => {
-            arr.sort(fieldSorter(["suitRank", "numberRank"]));
-            arr = arr;
-            console.log(arr);
-        }}>Suit Sort</button
-    >
+                    } else if (cardComparer(playedCards, selectedCards)) {
+                        console.log("Passed Card comparer");
+                        io.emit("playedCards", {
+                            cards: selectedCards,
+                            code: CODE,
+                            user: username,
+                            skippedTurn: 0,
+                        });
+                        i = isActive.length - 1;
+                        while (i >= 0) {
+                            removeByAttr(
+                                arr,
+                                "cardName",
+                                arr[isActive[i]].cardName
+                            );
+                            i--;
+                        }
+                    } else {
+                        console.log("Failed Card comparer");
+                    }
 
-    <button
-        on:click={() => {
-            arr.sort(fieldSorter(["numberRank", "suitRank"]));
-            arr = arr;
-        }}>Number Sort</button
+                    //if ( cardComparer({},{}))
+                    /*                     arr = arr;
+            io.emit("playedCards", {
+                cards: selectedCards,
+                code: CODE,
+                user: username,
+            }); */
+                    isActive = new Array();
+                } else {
+                    console.log("stop");
+                }
+            }}>Play Cards</Button
+        >
+        <Button disabled={!turn} on:click={skipTurn}>Skip Turn</Button>
+    </span>
+
+    <Button
+        on:click={distributeCards}
+        disabled={players.length !== 4 ? true : false}>Start Game</Button
     >
+    <span style="display:grid;position:absolute;bottom:0;left:0">
+        <Button
+            on:click={() => {
+                arr.sort(fieldSorter(["suitRank", "numberRank"]));
+                arr = arr;
+                console.log(arr);
+            }}>Suit Sort</Button
+        >
+
+        <Button
+            on:click={() => {
+                arr.sort(fieldSorter(["numberRank", "suitRank"]));
+                arr = arr;
+            }}>Number Sort</Button
+        >
+    </span>
 
     <div
         style="margin:5rem; position:absolute;transform:rotate(100deg);left:5rem;top:10rem;"
@@ -233,20 +272,14 @@
             <CardBack style={sty[i]} />
         {/each}
     </div>
+    <h1 class={turn ? "glow2" : ""}>{turn ? "Your turn" : ""}</h1>
     <PlayerBox
         {players}
         {turnPlayer}
         {username}
+        {nameArr}
         style={"right:1vw;position:absolute;top:1vw"}
     />
-    <!--     {#each players as player, index}
-        <h2 style={"text-align:center"}>
-            {turnPlayer === player ? "> " : ""}{player}{player === username
-                ? " (You)"
-                : ""}
-        </h2>
-    {/each} -->
-
     <div class="playedCards">
         {#if playedCards}
             {#each playedCards as x, index}
@@ -266,29 +299,24 @@
 </div>
 
 <style>
-    input {
-        width: auto;
-        height: 7vw; /* Use viewport width */
+    .modalShown {
+        background-color: rgb(0, 0, 0, 0.5);
+        width: 100vw;
+        height: 100vh;
+        z-index: 100;
+        top: 50%;
+        right: 50%;
+        transform: translate(50%, -50%);
+        position: fixed;
     }
-
-    img {
-        width: auto;
-        height: 7vw; /* Use viewport width */
-        margin: 1vw; /* Use viewport width */
-    }
-
     .isSelected {
         margin-bottom: 2vh; /* Use viewport height */
         border-color: yellow;
         border-width: 2vw; /* Use viewport width */
     }
-    .bottom-row {
-        position: absolute;
-        bottom: 0;
-        display: flex;
-        flex-direction: row;
-    }
+
     .playedCards {
+        position: absolute;
         margin: auto;
         padding: 2vh; /* Use viewport height */
         display: flex;
@@ -296,11 +324,29 @@
         align-items: center;
         grid-column: 1;
         grid-template-columns: 15vw 15vw; /* Use viewport width */
-        position: absolute;
+        top: 50%;
+        right: 50%;
+        transform: translate(50%, -50%);
+    }
+    .modal {
+        width: 25vw;
+        background-color: var(--box-background);
+        display: flex;
+        position: fixed;
+        padding: 1vw;
+        top: 50%;
+        right: 50%;
+        transform: translate(50%, -50%);
+        align-items: center;
+        justify-content: center;
+        z-index: 500;
+        border-radius: 1vw;
     }
 
     .card {
         margin-right: 1vw; /* Use viewport width */
+        width: auto;
+        height: 7vw;
     }
 
     .card:hover {
@@ -317,8 +363,9 @@
             minmax(5vw, 1fr)
         ); /* Use viewport width */
         bottom: 0;
-        position: relative;
-        margin: 1vw; /* Use viewport width */
+        position: absolute;
+        left: 8vw;
+        margin: 0.5vw; /* Use viewport width */
     }
 
     .game-background {
@@ -329,6 +376,13 @@
         border-radius: 3vw; /* Use viewport width */
         background: var(--game-background);
         padding: 1vw; /* Use viewport width */
+        margin-left: 2vw;
+    }
+
+    img {
+        width: auto;
+        height: 7vw; /* Use viewport width */
+        margin: 1vw; /* Use viewport width */
     }
 
     @media (max-width: 768px) {
@@ -342,6 +396,47 @@
                 auto-fit,
                 minmax(3vw, 1fr)
             ); /* Use viewport width */
+        }
+    }
+
+    .glow2 {
+        width: fit-content;
+        color: #fff;
+        text-shadow: 0 0 7px #fff, 0 0 10px #fff, 0 0 21px #fff,
+            0 0 42px #bc13fe, 0 0 82px #bc13fe, 0 0 92px #bc13fe,
+            0 0 102px #bc13fe, 0 0 151px #bc13fe;
+        border: 0.2rem solid #fff;
+        border-radius: 1rem;
+        padding: 1rem;
+        box-shadow: 0 0 0.2rem #fff, 0 0 0.2rem #fff, 0 0 2rem #bc13fe,
+            0 0 0.8rem #bc13fe, 0 0 2.8rem #bc13fe, inset 0 0 1.3rem #bc13fe;
+
+        font-size: 18px;
+        font-family: "Sacramento", sans-serif;
+        background-color: #010a01;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: absolute;
+
+        top: 10%;
+        right: 50%;
+        transform: translate(50%, -50%);
+
+        animation: pulsate 1.5s infinite alternate;
+    }
+
+    @keyframes pulsate {
+        100% {
+            text-shadow: 0 0 4px #fff, 0 0 11px #fff, 0 0 19px #fff,
+                0 0 40px #bc13fe, 0 0 80px #bc13fe, 0 0 90px #bc13fe,
+                0 0 100px #bc13fe, 0 0 150px #bc13fe;
+        }
+
+        0% {
+            text-shadow: 0 0 2px #fff, 0 0 4px #fff, 0 0 6px #fff,
+                0 0 10px #bc13fe, 0 0 45px #bc13fe, 0 0 55px #bc13fe,
+                0 0 70px #bc13fe, 0 0 80px #bc13fe;
         }
     }
 </style>

@@ -5,6 +5,5 @@
     export let data;
     import GameBoard from "../../GameBoard.svelte";
 </script>
-
-<h1>{data.slug}</h1>
+<h5 style='margin:10px;position:relative;align-self:center'>Group Code: {data.slug}</h5>
 <GameBoard CODE = {data.slug}/>

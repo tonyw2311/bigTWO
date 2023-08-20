@@ -5,12 +5,22 @@ import { Server } from 'socket.io';
 export default function injectSocketIO(server) {
     // Create a new instance of the Socket.IO server using the provided HTTP server
     const io = new Server(server);
-    // Initialize an array to store sequence numbers associated with clients
-    let sequenceNumberByClient = new Array();
+
+    let nameArr = new Array();
 
     // Event listener for new connections to the main namespace
     io.on('connection', (socket) => {
         socket.emit('name', socket.id);
+        let userName = [];
+        io.on("name", (name) => {
+            userName = name;
+
+        })
+
+        socket.on("disconnect", () => {
+            nameArr = nameArr.filter(e => e.substr(0,20) !== socket.id)
+            console.info(`Client gone [id=${socket.id}]`);
+        });
 
         // Event listener for 'groupID' message from a client
         socket.on('groupID', CODE => {
@@ -34,13 +44,24 @@ export default function injectSocketIO(server) {
             }
         });
 
+
+
+        socket.on('set-your-name', data => {
+            nameArr.push(socket.id+data.name)
+            console.log(data.username)
+            io.to(data.CODE).emit('set-your-name', {
+                username: data.username,
+                arr: nameArr,
+            })
+        })
+
         let players;
         socket.on('playedCards', (data) => {
             players = Array.from(io.sockets.adapter.rooms.get(data.code))
             let currentIndex = players.indexOf(data.user);
             let nextIndex = ++currentIndex % players.length
             console.log(players)
-            io.to(data.code).emit('playedCards', { cards: data.cards, turn: players[nextIndex], skippedTurn:data.skippedTurn })
+            io.to(data.code).emit('playedCards', { cards: data.cards, turn: players[nextIndex], skippedTurn: data.skippedTurn })
         })
 
 

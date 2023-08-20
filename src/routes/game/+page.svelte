@@ -3,27 +3,20 @@
     import Button from "../../components/Button.svelte";
     /** @type {import('./$types').PageData} */
     const newToken = Math.random().toString(16).slice(5);
-    async function refreshGroupID() {
-        const newToken = Math.random().toString(16).slice(2);
-    }
+
     import JoinModal from "../../components/JoinModal.svelte";
     let modalShown = false;
+    let socketID;
 
-    export const load = ({ params }) => {
-        return {
-            slug: newToken,
-        };
-    };
+
 </script>
 
 
 <div class="introBlock">
-    
 
     <div class="vertical-center">
-        
-        <h1>hi</h1>
-        <Button href={`/game/${newToken}`} type='link'>New Game</Button>
+
+        <Button href={`game/${newToken}`} type='link' >New Game</Button>
         <JoinModal isShown={modalShown} />
         <Button on:click={() => (modalShown = true)} > Join Game</Button>
     </div>
@@ -34,7 +27,6 @@
     .introBlock {
         height: 14vw;
         position: relative;
-        border: 3px solid green;
     }
     .vertical-center {
         margin: 0;

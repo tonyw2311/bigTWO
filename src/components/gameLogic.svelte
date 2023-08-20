@@ -15,6 +15,7 @@
     }
 
     export function isValid(card) {
+        console.log(card)
         if (allEqualNumbers(card)) return true;
         else if (fiveCardRank(card) !== 0) return true;
         return false;
@@ -56,6 +57,8 @@
     }
 
     function fiveCardRank(cards) {
+        console.log('five')
+        if(cards.length!==5) return 0;
         if (allEqualSuits(cards)) {
             if (allSequenced(cards)) {
                 return 5;
@@ -82,6 +85,7 @@
         } else {
             return 0;
         }
+        return 0;
     }
 
     const maxSuit = (arr) => Math.max(...arr.map((o) => o.suitRank));
