@@ -4,7 +4,7 @@ import { Server } from 'socket.io'
 
 import { handler } from '../build/handler.js'
 
-const port = 3000
+const port = 8080
 const app = express()
 const server = createServer(app)
 
