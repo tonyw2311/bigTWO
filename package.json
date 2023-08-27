@@ -2,6 +2,7 @@
 	"name": "big2",
 	"version": "0.0.1",
 	"scripts": {
+		"start": "node ./server",
 		"dev": "vite dev",
 		"build": "vite build",
 		"preview": "vite preview",
@@ -22,6 +23,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@types/express": "^4.17.17",
 		"express": "^4.18.2",
 		"socket.io": "^4.7.1",
 		"socket.io-client": "^4.7.1"
