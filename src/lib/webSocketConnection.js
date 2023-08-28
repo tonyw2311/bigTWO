@@ -3,6 +3,6 @@ import { io } from 'socket.io-client';
 
 const ENDPOINT = import.meta.env.VITE_UNSECURE_SECRET;
 
-const socket = io('https://bigtwo.pages.dev:8443', { transports: ['websocket', 'polling', 'flashsocket'] });
+export const socket = io('https://bigtwo.pages.dev:8443', { transports: ['websocket', 'polling', 'flashsocket'] });
 
-export const io = socket;
+//export const io = socket;
