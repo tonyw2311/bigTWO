@@ -4,7 +4,7 @@ import { Server } from 'socket.io'
 
 import { handler } from '../build/handler.js'
 
-const { port = 8443 } = process.env
+const port = 8443
 const app = express()
 const server = createServer(app)
 
@@ -22,7 +22,7 @@ io.on('connection', (socket) => {
     })
 
     socket.on("disconnect", () => {
-        nameArr = nameArr.filter(e => e.substr(0, 20) !== socket.id)
+        nameArr = nameArr.filter(e => e.substr(0,20) !== socket.id)
         console.info(`Client gone [id=${socket.id}]`);
     });
 
@@ -51,7 +51,7 @@ io.on('connection', (socket) => {
 
 
     socket.on('set-your-name', data => {
-        nameArr.push(socket.id + data.name)
+        nameArr.push(socket.id+data.name)
         console.log(data.username)
         io.to(data.CODE).emit('set-your-name', {
             username: data.username,
