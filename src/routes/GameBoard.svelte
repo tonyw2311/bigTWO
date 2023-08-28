@@ -1,7 +1,7 @@
 <script>
     // @ts-nocheck
     import "./styles.css";
-    import { socket} from "$lib/webSocketConnection.js";
+    import { io } from "$lib/webSocketConnection.js";
     import { onMount } from "svelte";
     import { spring } from "svelte/motion";
     import CardBack from "./CardBack.svelte";
@@ -47,20 +47,20 @@
     ];
 
     onMount(() => {
-        socket.emit("groupID", CODE);
+        io.emit("groupID", CODE);
 
-        socket.on("players", (playerArr) => {
+        io.on("players", (playerArr) => {
             players = playerArr;
             //players = players
         });
-        socket.on("groupID", (sum) => {
+        io.on("groupID", (sum) => {
             console.log(sum);
         });
 
-        socket.on("name", (name) => {
+        io.on("name", (name) => {
             username = name;
         });
-        socket.on("set-your-name", (data) => {
+        io.on("set-your-name", (data) => {
             console.log("hi");
             console.log(data.username + "hi");
             nameArr = data.arr;
@@ -68,7 +68,7 @@
                 isShown = false;
             }
         });
-        socket.on("cards", (distributedCards) => {
+        io.on("cards", (distributedCards) => {
             arr = new Array();
             for (let i = 0; i < distributedCards.length; i++) {
                 let splitted = split(distributedCards[i]);
@@ -86,7 +86,7 @@
             }
         });
 
-        socket.on("playedCards", (data) => {
+        io.on("playedCards", (data) => {
             playedCards = data.cards;
             turn = data.turn === username;
             turnPlayer = data.turn;
@@ -96,11 +96,11 @@
     });
 
     function distributeCards() {
-        socket.emit("distributeCards", CODE);
+        io.emit("distributeCards", CODE);
     }
 
     function skipTurn() {
-        socket.emit("playedCards", {
+        io.emit("playedCards", {
             cards: playedCards,
             code: CODE,
             user: username,
@@ -109,7 +109,7 @@
     }
 
     function setYourName() {
-        socket.emit("set-your-name", {
+        io.emit("set-your-name", {
             name: yourName,
             username: username,
             CODE,
@@ -182,7 +182,7 @@
                     if (!playedCards || skippedTurn === players.length - 1) {
                         if (isValid(selectedCards)) {
                             console.log("null or skipped");
-                            socket.emit("playedCards", {
+                            io.emit("playedCards", {
                                 cards: selectedCards,
                                 code: CODE,
                                 skippedTurn: 0,
@@ -200,7 +200,7 @@
                         }
                     } else if (cardComparer(playedCards, selectedCards)) {
                         console.log("Passed Card comparer");
-                        socket.emit("playedCards", {
+                        io.emit("playedCards", {
                             cards: selectedCards,
                             code: CODE,
                             user: username,
