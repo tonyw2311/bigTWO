@@ -1,7 +1,8 @@
-import ioClient from 'socket.io-client';
+// @ts-nocheck
+import { io } from 'socket.io-client';
 
 const ENDPOINT = import.meta.env.VITE_UNSECURE_SECRET;
 
-const socket = ioClient('wss://bigtwo.pages.dev:8443', { transports: ['websocket', 'polling', 'flashsocket'] });
+const socket = io('https://bigtwo.pages.dev:8443', { transports: ['websocket', 'polling', 'flashsocket'] });
 
 export const io = socket;
