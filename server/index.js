@@ -4,7 +4,7 @@ import { Server } from 'socket.io'
 
 import { handler } from '../build/handler.js'
 
-const port = 8443
+const port =  process.env.PORT || 8443 
 const app = express()
 const server = createServer(app)
 
@@ -167,4 +167,7 @@ console.log('SocketIO injected');
 // https://github.com/sveltejs/kit/tree/master/packages/adapter-node#custom-server
 app.use(handler)
 
-server.listen(port)
+server.listen(port,()=>
+{
+    console.log('Server running on ',port)
+})
