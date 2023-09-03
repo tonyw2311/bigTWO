@@ -53,17 +53,16 @@
 
         io.on("isStarted", (gameStarted) => {
             isStarted = gameStarted;
-            console.log('wow game started')
+            console.log("wow game started");
         });
 
         io.on("winner", (username) => {
             for (var i = 0; i < nameArr.length; i++) {
-                if (nameArr[i].substr(0,20) === username) {
-                    winner = nameArr[i].substr(20) +' won!'
+                if (nameArr[i].substr(0, 20) === username) {
+                    winner = nameArr[i].substr(20) + " won!";
                     break;
                 }
             }
-
         });
 
         io.on("players", (playerArr) => {
@@ -78,7 +77,6 @@
             username = name;
         });
         io.on("set-your-name", (data) => {
-            console.log("hi");
             console.log(data.username + "hi");
             nameArr = data.arr;
             if (data.username === username) {
@@ -142,70 +140,101 @@
 </script>
 
 <div class={isShown ? "modalShown" : ""} />
-<div class="game-background">
-    <div
-        class="modal"
-        style={isShown ? "visibility:shown" : "visibility:hidden"}
-    >
-        <input
-            style={"margin:20px"}
-            maxlength="20"
-            placeholder="Your name"
-            bind:value={yourName}
-            required
-        />
-        <Button on:click={setYourName} disabled={isEmpty(yourName)}>Join</Button
+<div class="demoWrapper">
+    <div class="game-background">
+        <div
+            class="modal"
+            style={isShown ? "visibility:shown" : "visibility:hidden"}
         >
-    </div>
-
-    <div class={"row-of-cards"}>
-        {#each myCards as card, index (card.url)}
             <input
-                value={"whatsittoyah"}
-                type="image"
-                src={card.url}
-                alt=""
-                draggable="false"
-                class={"card"}
-                class:isSelected={isActive.includes(index)}
-                on:click={() => {
-                    if (isActive.includes(index)) {
-                        isActive = isActive.filter((item) => item !== index);
-                        myCards = myCards;
-                    } else {
-                        isActive.push(index);
-                        myCards = myCards;
-                    }
-                }}
+                style={"margin:20px"}
+                maxlength="20"
+                placeholder="Your name"
+                bind:value={yourName}
+                required
             />
-        {/each}
-    </div>
+            <Button on:click={setYourName} disabled={isEmpty(yourName)}
+                >Join</Button
+            >
+        </div>
 
-    <span style={"display:grid;right:0;bottom:0;position:absolute; "}>
-        <Button
-            disabled={!turn}
-            on:click={() => {
-                selectedCards = new Array();
-                if (turn) {
-                    isActive.sort();
-                    let i = isActive.length - 1;
-                    while (i >= 0) {
-                        selectedCards.push(myCards[isActive[i]]);
-                        i--;
-                    }
+        <div class={"row-of-cards"}>
+            {#each myCards as card, index (card.url)}
+                <input
+                    value={"whatsittoyah"}
+                    type="image"
+                    src={card.url}
+                    alt=""
+                    draggable="false"
+                    class={"card"}
+                    class:isSelected={isActive.includes(index)}
+                    on:click={() => {
+                        if (isActive.includes(index)) {
+                            isActive = isActive.filter(
+                                (item) => item !== index
+                            );
+                            myCards = myCards;
+                        } else {
+                            isActive.push(index);
+                            myCards = myCards;
+                        }
+                    }}
+                />
+            {/each}
+        </div>
 
-                    console.log(typeof playedCards);
-                    if (!playedCards || skippedTurn === players.length - 1) {
-                        if (isValid(selectedCards)) {
-                            console.log("null or skipped");
+        <span style={"display:grid;bottom:5px;right:5px ;position:absolute "}>
+            <Button
+                disabled={!turn}
+                on:click={() => {
+                    selectedCards = new Array();
+                    if (turn) {
+                        isActive.sort();
+                        let i = isActive.length - 1;
+                        while (i >= 0) {
+                            selectedCards.push(myCards[isActive[i]]);
+                            i--;
+                        }
+
+                        console.log(typeof playedCards);
+                        if (
+                            !playedCards ||
+                            skippedTurn === players.length - 1
+                        ) {
+                            if (isValid(selectedCards)) {
+                                console.log("null or skipped");
+                                if (
+                                    myCards.length - selectedCards.length ===
+                                    0
+                                ) {
+                                    io.emit("winner", { CODE, username });
+                                }
+                                io.emit("playedCards", {
+                                    cards: selectedCards,
+                                    code: CODE,
+                                    skippedTurn: 0,
+                                    user: username,
+                                });
+                                i = isActive.length - 1;
+                                while (i >= 0) {
+                                    removeByAttr(
+                                        myCards,
+                                        "cardName",
+                                        myCards[isActive[i]].cardName
+                                    );
+                                    i--;
+                                }
+                            }
+                        } else if (cardComparer(playedCards, selectedCards)) {
+                            console.log("Passed Card comparer");
                             if (myCards.length - selectedCards.length === 0) {
                                 io.emit("winner", { CODE, username });
                             }
                             io.emit("playedCards", {
                                 cards: selectedCards,
                                 code: CODE,
-                                skippedTurn: 0,
                                 user: username,
+                                skippedTurn: 0,
                             });
                             i = isActive.length - 1;
                             while (i >= 0) {
@@ -216,109 +245,106 @@
                                 );
                                 i--;
                             }
+                        } else {
+                            console.log("Failed Card comparer");
                         }
-                    } else if (cardComparer(playedCards, selectedCards)) {
-                        console.log("Passed Card comparer");
-                        if (myCards.length - selectedCards.length === 0) {
-                                io.emit("winner", { CODE, username });
-                            }
-                        io.emit("playedCards", {
-                            cards: selectedCards,
-                            code: CODE,
-                            user: username,
-                            skippedTurn: 0,
-                        });
-                        i = isActive.length - 1;
-                        while (i >= 0) {
-                            removeByAttr(
-                                myCards,
-                                "cardName",
-                                myCards[isActive[i]].cardName
-                            );
-                            i--;
-                        }
-                    } else {
-                        console.log("Failed Card comparer");
-                    }
 
-                    //if ( cardComparer({},{}))
-                    /*                     arr = arr;
+                        //if ( cardComparer({},{}))
+                        /*                     arr = arr;
             io.emit("playedCards", {
                 cards: selectedCards,
                 code: CODE,
                 user: username,
             }); */
-                    isActive = new Array();
-                } else {
-                    console.log("stop");
-                }
-            }}>Play Cards</Button
-        >
-        <Button disabled={!turn} on:click={skipTurn}>Skip Turn</Button>
-    </span>
+                        isActive = new Array();
+                    } else {
+                        console.log("stop");
+                    }
+                }}>Play Cards</Button
+            >
+            <Button disabled={!turn} on:click={skipTurn}>Skip Turn</Button>
+        </span>
 
-    <Button
-        on:click={distributeCards}
-        isVisible={!isStarted}
-        disabled={players.length !== 4 ? true : false}
-        type='startButton'
-        >Start Game</Button
-    >
-    <span style="display:grid;position:absolute;bottom:0;left:0">
-        <Button
-            on:click={() => {
-                myCards.sort(fieldSorter(["suitRank", "numberRank"]));
-                myCards = myCards;
-                console.log(myCards);
-            }}>Suit Sort</Button
+        <span
+            style="position:absolute;  top: 50%; right: 50%;
+        transform: translate(50%,-50%) z-index:100;"
         >
+            <Button
+                on:click={distributeCards}
+                isVisible={!isStarted}
+                disabled={players.length !== 4 ? true : false}
+                type="startButton">Start Game</Button
+            >
+        </span>
+        <span style="display:grid;position:absolute;bottom:5px;left:5px">
+            <Button
+                on:click={() => {
+                    myCards.sort(fieldSorter(["suitRank", "numberRank"]));
+                    myCards = myCards;
+                    console.log(myCards);
+                }}>Suit Sort</Button
+            >
 
-        <Button
-            on:click={() => {
-                myCards.sort(fieldSorter(["numberRank", "suitRank"]));
-                myCards = myCards;
-            }}>Number Sort</Button
+            <Button
+                on:click={() => {
+                    myCards.sort(fieldSorter(["numberRank", "suitRank"]));
+                    myCards = myCards;
+                }}>Number Sort</Button
+            >
+        </span>
+        <h1>{winner}</h1>
+        <div
+            style="margin: 5vw; /* Adjust margin relative to the viewport width */
+            position: absolute;
+            transform: rotate(100deg);
+             top: 30%; left: 4%;"
         >
-    </span>
-    <h1>{winner}</h1>
-    <div
-        style="margin:5rem; position:absolute;transform:rotate(100deg);left:5rem;top:10rem;"
-    >
-        {#each { length: 13 } as _, i}
-            <CardBack style={sty[i]} />
-        {/each}
-    </div>
-
-    <div
-        style="margin:5rem; position:absolute;transform:rotate(-100deg);right:5rem;top:20rem;"
-    >
-        {#each { length: 13 } as _, i}
-            <CardBack style={sty[i]} />
-        {/each}
-    </div>
-    <h1 class={turn ? "glow2" : ""}>{turn ? "Your turn" : ""}</h1>
-    <PlayerBox
-        {players}
-        {turnPlayer}
-        {username}
-        {nameArr}
-        style={"right:1vw;position:absolute;top:1vw"}
-    />
-    <div class="playedCards">
-        {#if playedCards}
-            {#each playedCards as x, index}
-                <img
-                    value={"whatsittoyah"}
-                    type="image"
-                    src={new URL(
-                        `../lib/images/cards/${playedCards[index].cardName}.png`,
-                        import.meta.url
-                    ).href}
-                    alt=""
-                    draggable="false"
-                />
+            {#each { length: 13 } as _, i}
+                <CardBack style={sty[i]} />
             {/each}
-        {/if}
+        </div>
+
+        <div
+            style="margin:5rem; position:absolute;transform:rotate(-100deg);bottom: 30%; right: 2%;"
+        >
+            {#each { length: 13 } as _, i}
+                <CardBack style={sty[i]} />
+            {/each}
+        </div>
+
+<!--         <div
+        style="margin:5rem; position:absolute;transform:rotate(180deg);top: 3%; right: 50%;"
+    >
+        {#each { length: 13 } as _, i}
+            <CardBack style={sty[i]} />
+        {/each}
+    </div> -->
+        <h1 class={turn ? "glow2" : ""}>{turn ? "Your turn" : ""}</h1>
+
+        <PlayerBox
+            {players}
+            {turnPlayer}
+            {username}
+            {nameArr}
+            style={"right:0;position:absolute;top:0"}
+        />
+
+        <div class="playedCards">
+            {#if playedCards}
+                {#each playedCards as x, index}
+                    <img
+                        value={"whatsittoyah"}
+                        type="image"
+                        src={new URL(
+                            `../lib/images/cards/${playedCards[index].cardName}.png`,
+                            import.meta.url
+                        ).href}
+                        alt=""
+                        draggable="false"
+                    />
+                {/each}
+            {/if}
+        </div>
     </div>
 </div>
 
@@ -368,16 +394,16 @@
     }
 
     .card {
-        margin-right: 1vw; /* Use viewport width */
+        margin-right: 0.5vw; /* Use viewport width */
         width: auto;
         height: 7vw;
+        border: solid transparent 3px;
+        border-radius: 4px;
     }
 
     .card:hover {
-        margin-bottom: 2vh; /* Use viewport height */
-        border-color: blueviolet;
-        border-width: 1vw; /* Use viewport width */
-        border: #ff3e00;
+        border: #ccff15 solid 3px;
+        border-radius: 5px;
     }
 
     .row-of-cards {
@@ -391,16 +417,21 @@
         left: 8vw;
         margin: 0.5vw; /* Use viewport width */
     }
+    .demoWrapper {
+        margin: 0.5vw;
+        box-sizing: border-box;
+        resize: horizontal;
+        max-width: 95%;
+        height: calc(100vh - 16px);
+    }
 
     .game-background {
-        position: absolute;
-        width: 90vw; /* Use viewport width */
-        height: 80vh; /* Use viewport height */
+        position: relative;
+        background: var(--game-background);
         border: 2vw solid var(--game-border); /* Use viewport width */
         border-radius: 3vw; /* Use viewport width */
-        background: var(--game-background);
-        padding: 1vw; /* Use viewport width */
-        margin-left: 2vw;
+        width: 100%;
+        padding-bottom: 45.25%;
     }
 
     img {

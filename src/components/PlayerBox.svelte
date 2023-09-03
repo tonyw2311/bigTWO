@@ -24,9 +24,7 @@
 
 <div class="backgroundBox" {style}>
     {#each players as player, x}
-        <div
-            style="display:grid;grid-template-columns:30px 1fr; white-space:nowrap;margin:20px 0; grid-cols:2;"
-        >
+        <div class="playerBox">
             <span
                 class={turnPlayer === player ? "dot-active" : "dot-inactive"}
             />
@@ -37,7 +35,7 @@
                             ? " (You)"
                             : ""}</span
                     >
-<!--                 {:else}
+                    <!--                 {:else}
                     <div>
                         {#each waiting as char}
                             <span style="margin:0">{char}</span>
@@ -45,78 +43,37 @@
                     </div> -->
                 {/if}
             {/each}
-            
         </div>
     {/each}
 </div>
 
 <style>
-    @keyframes pulse {
-        0% {
-            transform: scale(0.95);
-            box-shadow: 0 0 0 3px #00ab00, inset 0 0 3px #00ab00;
-        }
-
-        70% {
-            transform: scale(1);
-            box-shadow: 0 0 0 4px #00ab00, inset 0 0 3px #00ab00;
-        }
-
-        100% {
-            transform: scale(0.95);
-            box-shadow: 0 0 0 3px #00ab00, inset 0 0 3px #00ab00;
-        }
-    }
-
     .backgroundBox {
         display: inline-block;
-        padding: 10px;
+        padding: 2%; /* Adjust padding relative to the parent container */
     }
+
+    .playerBox {
+        display: grid;
+        grid-template-columns:30px 1fr; /* Adjust column width relative to the parent container */
+        white-space: nowrap;
+        margin: 10px; /* Adjust margin relative to the parent container */
+        font-size: 1vw;
+    }
+
     .dot-active {
         position: relative;
-        vertical-align: middle;
         align-self: center;
-        border-top: 6px solid transparent;
-        border-bottom: 6px solid transparent;
-        border-left: 18px solid #00ab00;
+        border-top: .75vh solid transparent; /* Adjust border width relative to the viewport width */
+        border-bottom: .75vh solid transparent; /* Adjust border width relative to the viewport width */
+        border-left: 1.5vw solid #00ab00; /* Adjust border width relative to the viewport width */
     }
+
     .dot-inactive {
         position: relative;
         align-self: center;
-        border-top: 6px solid transparent;
-        border-bottom: 6px solid transparent;
-        border-left: 18px solid var(--main-background);
-    }
-
-    .waveTextAnimated span:nth-of-type(1) {
-        -webkit-animation-delay: 0s;
-        animation-delay: 0s;
-    }
-    .waveTextAnimated span:nth-of-type(2) {
-        -webkit-animation-delay: 0.1s;
-        animation-delay: 0.1s;
-    }
-    .waveTextAnimated span:nth-of-type(3) {
-        -webkit-animation-delay: 0.2s;
-        animation-delay: 0.2s;
-    }
-    .waveTextAnimated span:nth-of-type(4) {
-        -webkit-animation-delay: 0.3s;
-        animation-delay: 0.3s;
-    }
-    .waveTextAnimated span:nth-of-type(5) {
-        -webkit-animation-delay: 0.4s;
-        animation-delay: 0.4s;
-    }
-    @keyframes wave-text {
-        00% {
-            transform: translateY(0em);
-        }
-        60% {
-            transform: translateY(-0.6em);
-        }
-        100% {
-            transform: translateY(0em);
-        }
+        border-top: .75vh solid transparent; /* Adjust border width relative to the viewport width */
+        border-bottom: .75vh solid transparent; /* Adjust border width relative to the viewport width */
+        border-left: 1.5vw solid var(--main-background);
     }
 </style>

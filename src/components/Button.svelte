@@ -55,15 +55,16 @@
 {/if}
 
 <style>
-    .buttonStyle {
-        color: rgb(213, 198, 226);
-        padding: 10px;
-        background-color: rgb(54, 53, 100);
-        border-radius: 5px;
-        margin: 10px;
-        font-size: 12px;
-        width: fit-content;
-        height: fit-content;
-    }
+.buttonStyle {
+    color: rgb(213, 198, 226);
+    padding:5%; /* Use percentage-based padding to maintain aspect ratio */
+    background-color: rgb(54, 53, 100);
+    border-radius: 5px;
+    margin:5px; /* Use percentage-based margin */
+    font-size: 1vw; /* Use viewport units for font-size (adjust as needed) */
+    width: auto; /* Set width to auto for content-based sizing */
+    height: auto; /* Set height to auto for content-based sizing */
+}
+
 
 </style>
