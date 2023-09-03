@@ -1,6 +1,6 @@
 <script>
     // @ts-nocheck
-    import { goto } from '$app/navigation';
+    import { goto } from "$app/navigation";
     export let disabled = false;
     export let type = "button";
     export let href = "";
@@ -12,17 +12,31 @@
 
 {#if type === "link"}
     <button
-    on:click={()=>routeToPage(href,false)}
-    on:mouseover
-    on:focus
-    on:mouseenter
-    on:mouseleave
-    class={isVisible ? "buttonStyle":"invisible"}
-    style={disabled ? "background-color:gray" : ""}
-    {disabled}
->
-    <slot />
-</button>
+        on:click={() => routeToPage(href, false)}
+        on:mouseover
+        on:focus
+        on:mouseenter
+        on:mouseleave
+        class={"buttonStyle"}
+        style={disabled ? "background-color:gray" : ""}
+        {disabled}
+    >
+        <slot />
+    </button>
+{:else if type === "startButton"}
+    <button
+        on:click
+        on:mouseover
+        on:focus
+        on:mouseenter
+        on:mouseleave
+        class={"buttonStyle"}
+        style={isVisible ? "visibility:visible" : "visibility:hidden;"}
+        disabled={!isVisible}
+    >
+        <slot />
+    </button>
+
 {:else if type === "button"}
     <button
         on:click
@@ -30,8 +44,10 @@
         on:focus
         on:mouseenter
         on:mouseleave
-        class={isVisible ? "buttonStyle":"invisible"}
-        style={disabled ? "background-color:gray" : ""}
+        class={"buttonStyle"}
+        style={disabled
+            ? "background-color:gray"
+            : ""}
         {disabled}
     >
         <slot />
@@ -49,7 +65,7 @@
         width: fit-content;
         height: fit-content;
     }
-    .invisible{
+    .invisible {
         visibility: hidden;
     }
 </style>

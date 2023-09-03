@@ -53,6 +53,7 @@
 
         io.on("isStarted", (gameStarted) => {
             isStarted = gameStarted;
+            console.log('wow game started')
         });
 
         io.on("winner", (username) => {
@@ -259,7 +260,9 @@
     <Button
         on:click={distributeCards}
         isVisible={!isStarted}
-        disabled={players.length !== 4 ? true : false}>Start Game</Button
+        disabled={players.length !== 4 ? true : false}
+        type='startButton'
+        >Start Game</Button
     >
     <span style="display:grid;position:absolute;bottom:0;left:0">
         <Button

@@ -42,8 +42,7 @@
         nextCards.sort(dynamicSort("numberRank"));
         if (prevCardsRank < nextCardsRank) return true;
         else if (prevCardsRank === 3 || prevCardsRank === 4) {
-            if (occurenceMax(prevCardsRank) < occurenceMax(nextCards))
-                return true;
+            if (occurenceMax(prevCards) < occurenceMax(nextCards)) return true;
         } else if (prevCardsRank === 2) {
             if (prevCards[0].suitRank < nextCards[0].suitRank) return true;
         } else if (prevCardsRank === 1) {
@@ -58,7 +57,6 @@
     }
 
     function fiveCardRank(cards) {
-
         if (cards.length !== 5) {
             console.log("huhh?");
 
@@ -69,12 +67,9 @@
             }
             return 2;
         } else if (Math.max(...occurenceArr(cards)) === 4) {
-
             return 3;
-        } else if (Math.max(...occurenceArr(cards))  === 3) {
-            if (
-                Math.min(...occurenceArr(cards))  === 2
-            ) {
+        } else if (Math.max(...occurenceArr(cards)) === 3) {
+            if (Math.min(...occurenceArr(cards)) === 2) {
                 return 4;
             }
         } else if (allSequenced(cards)) {
@@ -92,7 +87,7 @@
     const allEqualSuits = (arr) =>
         arr.every((val) => val.suitRank === arr[0].suitRank);
 
-/*     const occurences = async (arr) =>
+    /*     const occurences = async (arr) =>
         Math.max.apply(
             null,
             Object.values(
@@ -105,12 +100,15 @@
             )
         ); */
 
-
-    const occurenceArr=  (arr) => {
+    const occurenceArr = (arr) => {
         let count = new Array();
         for (let i = 0; i < arr.length; i++) {
             count.push(
-                arr.reduce((acc, cur) => (cur.numberRank === arr[i].numberRank ? ++acc : acc), 0)
+                arr.reduce(
+                    (acc, cur) =>
+                        cur.numberRank === arr[i].numberRank ? ++acc : acc,
+                    0
+                )
             );
         }
         return count;
