@@ -31,8 +31,8 @@
         on:mouseenter
         on:mouseleave
         class={"buttonStyle"}
-        style={isVisible ? "visibility:visible" : "visibility:hidden;"}
-        disabled={!isVisible}
+        style={isVisible ? (disabled ? "background-color:gray":'') : "visibility:hidden;"}
+        disabled={!isVisible || disabled}
     >
         <slot />
     </button>
@@ -65,7 +65,5 @@
         width: fit-content;
         height: fit-content;
     }
-    .invisible {
-        visibility: hidden;
-    }
+
 </style>
