@@ -18,7 +18,7 @@
     import { cardComparer, isValid } from "../components/gameLogic.svelte";
     let username = "lol";
     export let CODE;
-    let arr = new Array();
+    let myCards = new Array();
     let turn = false;
     let turnPlayer;
     let isShown = true;
@@ -28,6 +28,8 @@
     let skippedTurn = 0;
     let yourName = "";
     let nameArr;
+    let isStarted = false;
+    let winner = "";
 
     const sty = [
         "transform: rotate(-20deg) translate(-7.5vw);",
@@ -49,6 +51,20 @@
     onMount(() => {
         io.emit("groupID", CODE);
 
+        io.on("isStarted", (gameStarted) => {
+            isStarted = gameStarted;
+        });
+
+        io.on("winner", (username) => {
+            for (var i = 0; i < nameArr.length; i++) {
+                if (nameArr[i].substr(0,20) === username) {
+                    winner = nameArr[i].substr(20) +' won!'
+                    break;
+                }
+            }
+
+        });
+
         io.on("players", (playerArr) => {
             players = playerArr;
             //players = players
@@ -69,10 +85,10 @@
             }
         });
         io.on("cards", (distributedCards) => {
-            arr = new Array();
+            myCards = new Array();
             for (let i = 0; i < distributedCards.length; i++) {
                 let splitted = split(distributedCards[i]);
-                arr.push({
+                myCards.push({
                     number: Number(splitted[0]),
                     numberRank: numberRank(Number(splitted[0])),
                     suit: splitted[1],
@@ -126,7 +142,6 @@
 
 <div class={isShown ? "modalShown" : ""} />
 <div class="game-background">
-
     <div
         class="modal"
         style={isShown ? "visibility:shown" : "visibility:hidden"}
@@ -143,7 +158,7 @@
     </div>
 
     <div class={"row-of-cards"}>
-        {#each arr as card, index (card.url)}
+        {#each myCards as card, index (card.url)}
             <input
                 value={"whatsittoyah"}
                 type="image"
@@ -155,10 +170,10 @@
                 on:click={() => {
                     if (isActive.includes(index)) {
                         isActive = isActive.filter((item) => item !== index);
-                        arr = arr;
+                        myCards = myCards;
                     } else {
                         isActive.push(index);
-                        arr = arr;
+                        myCards = myCards;
                     }
                 }}
             />
@@ -174,7 +189,7 @@
                     isActive.sort();
                     let i = isActive.length - 1;
                     while (i >= 0) {
-                        selectedCards.push(arr[isActive[i]]);
+                        selectedCards.push(myCards[isActive[i]]);
                         i--;
                     }
 
@@ -182,6 +197,9 @@
                     if (!playedCards || skippedTurn === players.length - 1) {
                         if (isValid(selectedCards)) {
                             console.log("null or skipped");
+                            if (myCards.length - selectedCards.length === 0) {
+                                io.emit("winner", { CODE, username });
+                            }
                             io.emit("playedCards", {
                                 cards: selectedCards,
                                 code: CODE,
@@ -191,15 +209,18 @@
                             i = isActive.length - 1;
                             while (i >= 0) {
                                 removeByAttr(
-                                    arr,
+                                    myCards,
                                     "cardName",
-                                    arr[isActive[i]].cardName
+                                    myCards[isActive[i]].cardName
                                 );
                                 i--;
                             }
                         }
                     } else if (cardComparer(playedCards, selectedCards)) {
                         console.log("Passed Card comparer");
+                        if (myCards.length - selectedCards.length === 0) {
+                                io.emit("winner", { CODE, username });
+                            }
                         io.emit("playedCards", {
                             cards: selectedCards,
                             code: CODE,
@@ -209,9 +230,9 @@
                         i = isActive.length - 1;
                         while (i >= 0) {
                             removeByAttr(
-                                arr,
+                                myCards,
                                 "cardName",
-                                arr[isActive[i]].cardName
+                                myCards[isActive[i]].cardName
                             );
                             i--;
                         }
@@ -237,25 +258,26 @@
 
     <Button
         on:click={distributeCards}
+        isVisible={!isStarted}
         disabled={players.length !== 4 ? true : false}>Start Game</Button
     >
     <span style="display:grid;position:absolute;bottom:0;left:0">
         <Button
             on:click={() => {
-                arr.sort(fieldSorter(["suitRank", "numberRank"]));
-                arr = arr;
-                console.log(arr);
+                myCards.sort(fieldSorter(["suitRank", "numberRank"]));
+                myCards = myCards;
+                console.log(myCards);
             }}>Suit Sort</Button
         >
 
         <Button
             on:click={() => {
-                arr.sort(fieldSorter(["numberRank", "suitRank"]));
-                arr = arr;
+                myCards.sort(fieldSorter(["numberRank", "suitRank"]));
+                myCards = myCards;
             }}>Number Sort</Button
         >
     </span>
-
+    <h1>{winner}</h1>
     <div
         style="margin:5rem; position:absolute;transform:rotate(100deg);left:5rem;top:10rem;"
     >

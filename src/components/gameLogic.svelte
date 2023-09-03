@@ -15,7 +15,8 @@
     }
 
     export function isValid(card) {
-        console.log(card)
+        console.log(card);
+        console.log(fiveCardRank(card));
         if (allEqualNumbers(card)) return true;
         else if (fiveCardRank(card) !== 0) return true;
         return false;
@@ -57,34 +58,29 @@
     }
 
     function fiveCardRank(cards) {
-        console.log('five')
-        if(cards.length!==5) return 0;
-        if (allEqualSuits(cards)) {
+
+        if (cards.length !== 5) {
+            console.log("huhh?");
+
+            return 0;
+        } else if (allEqualSuits(cards)) {
             if (allSequenced(cards)) {
                 return 5;
             }
             return 2;
-        } else if (occurences(cards) === 4) {
+        } else if (Math.max(...occurenceArr(cards)) === 4) {
+
             return 3;
-        } else if (occurences(cards) === 3) {
+        } else if (Math.max(...occurenceArr(cards))  === 3) {
             if (
-                Object.values(
-                    cards.reduce(
-                        (acc, o) => (
-                            (acc[o.numberRank] = (acc[o.numberRank] || 0) + 1),
-                            acc
-                        ),
-                        {}
-                    )
-                ).length === 2
+                Math.min(...occurenceArr(cards))  === 2
             ) {
                 return 4;
             }
         } else if (allSequenced(cards)) {
             return 1;
-        } else {
-            return 0;
         }
+
         return 0;
     }
 
@@ -96,7 +92,7 @@
     const allEqualSuits = (arr) =>
         arr.every((val) => val.suitRank === arr[0].suitRank);
 
-    const occurences = async (arr) =>
+/*     const occurences = async (arr) =>
         Math.max.apply(
             null,
             Object.values(
@@ -107,9 +103,20 @@
                     {}
                 )
             )
-        );
+        ); */
 
-    const occurenceMax = async (arr) => {
+
+    const occurenceArr=  (arr) => {
+        let count = new Array();
+        for (let i = 0; i < arr.length; i++) {
+            count.push(
+                arr.reduce((acc, cur) => (cur.numberRank === arr[i].numberRank ? ++acc : acc), 0)
+            );
+        }
+        return count;
+    };
+
+    const occurenceMax =  (arr) => {
         var keys = Object.keys(
             arr.reduce(
                 (acc, o) => (

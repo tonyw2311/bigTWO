@@ -4,9 +4,7 @@
     export let disabled = false;
     export let type = "button";
     export let href = "";
-    let buttonProps = {
-        class: [$$restProps.class],
-    };
+    export let isVisible = true;
     function routeToPage(route, replaceState) {
         goto(`/${route}`, { replaceState });
     }
@@ -19,7 +17,7 @@
     on:focus
     on:mouseenter
     on:mouseleave
-    class="buttonStyle"
+    class={isVisible ? "buttonStyle":"invisible"}
     style={disabled ? "background-color:gray" : ""}
     {disabled}
 >
@@ -32,7 +30,7 @@
         on:focus
         on:mouseenter
         on:mouseleave
-        class="buttonStyle"
+        class={isVisible ? "buttonStyle":"invisible"}
         style={disabled ? "background-color:gray" : ""}
         {disabled}
     >
@@ -50,5 +48,8 @@
         font-size: 12px;
         width: fit-content;
         height: fit-content;
+    }
+    .invisible{
+        visibility: hidden;
     }
 </style>

@@ -18,7 +18,7 @@ export default function injectSocketIO(server) {
         })
 
         socket.on("disconnect", () => {
-            nameArr = nameArr.filter(e => e.substr(0,20) !== socket.id)
+            nameArr = nameArr.filter(e => e.substr(0, 20) !== socket.id)
             console.info(`Client gone [id=${socket.id}]`);
         });
 
@@ -47,7 +47,7 @@ export default function injectSocketIO(server) {
 
 
         socket.on('set-your-name', data => {
-            nameArr.push(socket.id+data.name)
+            nameArr.push(socket.id + data.name)
             console.log(data.username)
             io.to(data.CODE).emit('set-your-name', {
                 username: data.username,
@@ -64,10 +64,17 @@ export default function injectSocketIO(server) {
             io.to(data.code).emit('playedCards', { cards: data.cards, turn: players[nextIndex], skippedTurn: data.skippedTurn })
         })
 
+        /*         socket.on('isStarted', (data)=>{
+                    io.to(data.CODE).emit('isStarted', )
+                }) */
+        socket.on('winner', (data) => {
+            io.to(data.CODE).emit('winner', data.username);
+        })
 
         socket.on('distributeCards', async (code) => {
             let players = Array.from(io.sockets.adapter.rooms.get(code))
             let distributedCards = await shuffle()
+            io.to(code).emit('isStarted', true)
             io.to(code).emit('playedCards', {
                 cards: null,
                 turn: players[0]
