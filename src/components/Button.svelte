@@ -62,6 +62,7 @@
     border-radius: 5px;
     margin:5px; /* Use percentage-based margin */
     font-size: 1vw; /* Use viewport units for font-size (adjust as needed) */
+    min-width: fit-content;
     width: auto; /* Set width to auto for content-based sizing */
     height: auto; /* Set height to auto for content-based sizing */
 }

@@ -7,8 +7,8 @@
 </script>
 
 <div class="modal" style={isShown ? "visibility:shown" : "visibility:hidden"}>
-    <input style={"margin:20px"} bind:value={groupID} />
-    <Button href={`game/${groupID}`} type='link'>Join</Button>
+    <input style={"margin:20px"} bind:value={groupID} placeholder="Enter code"/>
+    <Button href={`game/${groupID}`} type='link'>Join </Button>
 </div>
 
 <style>
@@ -16,7 +16,8 @@
         height: 100px;
         background-color: var(--box-background);
         position: absolute;
-        padding: 1vw;
+        padding: 2vw;
+        border-radius: 1vw;
     }
 /*     .modal-overlay {
         display: none;

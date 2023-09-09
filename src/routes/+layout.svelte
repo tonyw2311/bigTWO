@@ -3,7 +3,7 @@
 </script>
 
 <div class="app">
-	<h1 style='margin:0'>big TWO</h1>
+	<a style='margin:0;color:white;text-decoration:none' href='/'>big TWO</a>
 
 	<main>
 		<slot />
@@ -25,9 +25,6 @@
 		flex: 1;
 	}
 
-	footer a {
-		font-weight: bold;
-	}
 
 	@media (min-width: 480px) {
 		footer {

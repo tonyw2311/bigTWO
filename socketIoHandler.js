@@ -44,7 +44,9 @@ export default function injectSocketIO(server) {
             }
         });
 
-
+        socket.on('lessThanFive', data => {
+            io.to(data.CODE).emit('lessThanFive', data.lessThanFivers)
+        })
 
         socket.on('set-your-name', data => {
             nameArr.push(socket.id + data.name)
@@ -61,7 +63,10 @@ export default function injectSocketIO(server) {
             let currentIndex = players.indexOf(data.user);
             let nextIndex = ++currentIndex % players.length
             console.log(players)
-            io.to(data.code).emit('playedCards', { cards: data.cards, turn: players[nextIndex], skippedTurn: data.skippedTurn })
+            if (data.playedName) {
+                io.to(data.code).emit('playedCards', { cards: data.cards, playerName: data.playedName, turn: players[nextIndex], skippedTurn: data.skippedTurn })
+            }
+            else { io.to(data.code).emit('playedCards', { cards: data.cards, playerName: data.user, turn: players[nextIndex], skippedTurn: data.skippedTurn }) }
         })
 
         /*         socket.on('isStarted', (data)=>{

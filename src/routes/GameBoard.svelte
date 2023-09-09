@@ -1,9 +1,9 @@
 <script>
     // @ts-nocheck
+
     import "./styles.css";
     import { io } from "$lib/webSocketConnection.js";
     import { onMount } from "svelte";
-    import { spring } from "svelte/motion";
     import CardBack from "./CardBack.svelte";
     import {
         split,
@@ -20,10 +20,12 @@
     export let CODE;
     let myCards = new Array();
     let turn = false;
+    let lessThanFivers = new Array();
     let turnPlayer;
     let isShown = true;
     let selectedCards;
     let playedCards;
+    let playedName = "";
     let players = new Array();
     let skippedTurn = 0;
     let yourName = "";
@@ -65,6 +67,10 @@
             }
         });
 
+        io.on("lessThanFive", (arr) => {
+            lessThanFivers = arr;
+        });
+
         io.on("players", (playerArr) => {
             players = playerArr;
             //players = players
@@ -103,10 +109,18 @@
 
         io.on("playedCards", (data) => {
             playedCards = data.cards;
+            playedName = data.playerName;
             turn = data.turn === username;
             turnPlayer = data.turn;
             turn = turn;
             skippedTurn = data.skippedTurn;
+            if (turn) {
+                console.log("wow");
+                if (myCards.length === 0) {
+                    skipTurn();
+                    console.log("Turn skipped");
+                }
+            }
         });
     });
 
@@ -119,6 +133,7 @@
             cards: playedCards,
             code: CODE,
             user: username,
+            playedName,
             skippedTurn: skippedTurn + 1,
         });
     }
@@ -129,6 +144,14 @@
             username: username,
             CODE,
         });
+    }
+    function personName(name) {
+        for (let i = 0; i < nameArr.length; i++) {
+            if (name === nameArr[i].substr(0, 20)) {
+                return nameArr[i].substr(20);
+            }
+        }
+        return "NoName";
     }
 
     function isEmpty(input) {
@@ -188,7 +211,7 @@
                 disabled={!turn}
                 on:click={() => {
                     selectedCards = new Array();
-                    if (turn) {
+                    if (turn && isActive.length !== 0) {
                         isActive.sort();
                         let i = isActive.length - 1;
                         while (i >= 0) {
@@ -196,11 +219,7 @@
                             i--;
                         }
 
-                        console.log(typeof playedCards);
-                        if (
-                            !playedCards ||
-                            skippedTurn === players.length - 1
-                        ) {
+                        if (!playedCards || skippedTurn >= players.length - 1) {
                             if (isValid(selectedCards)) {
                                 console.log("null or skipped");
                                 if (
@@ -208,6 +227,16 @@
                                     0
                                 ) {
                                     io.emit("winner", { CODE, username });
+                                }
+                                if (
+                                    myCards.length - selectedCards.length <=
+                                    5
+                                ) {
+                                    lessThanFivers.push(username);
+                                    io.emit("lessThanFive", {
+                                        CODE,
+                                        lessThanFivers,
+                                    });
                                 }
                                 io.emit("playedCards", {
                                     cards: selectedCards,
@@ -249,13 +278,6 @@
                             console.log("Failed Card comparer");
                         }
 
-                        //if ( cardComparer({},{}))
-                        /*                     arr = arr;
-            io.emit("playedCards", {
-                cards: selectedCards,
-                code: CODE,
-                user: username,
-            }); */
                         isActive = new Array();
                     } else {
                         console.log("stop");
@@ -312,7 +334,7 @@
             {/each}
         </div>
 
-<!--         <div
+        <!--         <div
         style="margin:5rem; position:absolute;transform:rotate(180deg);top: 3%; right: 50%;"
     >
         {#each { length: 13 } as _, i}
@@ -326,10 +348,11 @@
             {turnPlayer}
             {username}
             {nameArr}
+            {lessThanFivers}
             style={"right:0;position:absolute;top:0"}
         />
 
-        <div class="playedCards">
+        <div class="playedCards tooltip">
             {#if playedCards}
                 {#each playedCards as x, index}
                     <img
@@ -343,6 +366,9 @@
                         draggable="false"
                     />
                 {/each}
+                <span class="tooltiptext"
+                    >{personName(playedName)} played this set</span
+                >
             {/if}
         </div>
     </div>
