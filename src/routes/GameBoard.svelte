@@ -1,6 +1,11 @@
 <script>
     // @ts-nocheck
+    import { gsap } from "gsap";
+    import Flip from "gsap/dist/Flip";
+    gsap.registerPlugin(Flip);
 
+    import { slide } from "svelte/transition";
+    import { quintOut } from "svelte/easing";
     import "./styles.css";
     import { io } from "$lib/webSocketConnection.js";
     import { onMount } from "svelte";
@@ -16,8 +21,12 @@
     import Button from "../components/Button.svelte";
     import PlayerBox from "../components/PlayerBox.svelte";
     import { cardComparer, isValid } from "../components/gameLogic.svelte";
+    import WinnerBox from "../components/WinnerBox.svelte";
     let username = "lol";
     export let CODE;
+    let winnerIsShown = false;
+    let winners = new Array(3);
+    for (let i = 0; i < 3; ++i) winners[i] = 0;
     let myCards = new Array();
     let turn = false;
     let lessThanFivers = new Array();
@@ -27,28 +36,28 @@
     let playedCards;
     let playedName = "";
     let players = new Array();
+    $: otherPlayers = players.filter((x) => {
+        if (x === username) {
+            return false;
+        }
+        return true;
+    });
     let skippedTurn = 0;
     let yourName = "";
-    let nameArr;
+    let nameArr = new Array();
     let isStarted = false;
     let winner = "";
-
-    const sty = [
-        "transform: rotate(-20deg) translate(-7.5vw);",
-        "transform: rotate(-17deg) translate(-6vw);",
-        "transform: rotate(-15deg) translate(-5vw);",
-        "transform: rotate(-12deg) translate(-3.5vw);",
-        "transform: rotate(-10deg) translate(-2.5vw);",
-        "transform: rotate(-5deg) translate(-1.25vw);",
-        "transform: rotate(0deg) translate(0);",
-        "transform: rotate(5deg) translate(1.25vw);",
-        "transform: rotate(10deg) translate(2.5vw);",
-        "transform: rotate(15deg) translate(3.5vw);",
-        "transform: rotate(20deg) translate(5vw);",
-        "transform: rotate(25deg) translate(6vw);",
-        "transform: rotate(30deg) translate(7.5vw);",
-        "transform: rotate(40deg) translate(8.5vw);",
-    ];
+    let isActive = new Array();
+    let isTransitionMiddle = true;
+    let isTransition1 = true;
+    let isTransition2 = true;
+    let isTransition3 = true;
+    let x = "100";
+    let y = "45vw";
+    let middleCardShown = true;
+    let name1 = "";
+    let name2 = "";
+    let name3 = "";
 
     onMount(() => {
         io.emit("groupID", CODE);
@@ -73,6 +82,13 @@
 
         io.on("players", (playerArr) => {
             players = playerArr;
+            otherPlayers = players.filter((x) => {
+                if (x === username) {
+                    return false;
+                }
+                return true;
+            });
+            console.log(otherPlayers);
             //players = players
         });
         io.on("groupID", (sum) => {
@@ -85,6 +101,10 @@
         io.on("set-your-name", (data) => {
             console.log(data.username + "hi");
             nameArr = data.arr;
+            name1 = personName(otherPlayers[0]);
+            name2 = personName(otherPlayers[1]);
+            name3 = personName(otherPlayers[2]);
+
             if (data.username === username) {
                 isShown = false;
             }
@@ -94,6 +114,8 @@
             for (let i = 0; i < distributedCards.length; i++) {
                 let splitted = split(distributedCards[i]);
                 myCards.push({
+                    isAnimated: false,
+                    isShown: false,
                     number: Number(splitted[0]),
                     numberRank: numberRank(Number(splitted[0])),
                     suit: splitted[1],
@@ -105,6 +127,7 @@
                     cardName: distributedCards[i],
                 });
             }
+            startGameAnimation();
         });
 
         io.on("playedCards", (data) => {
@@ -114,6 +137,20 @@
             turnPlayer = data.turn;
             turn = turn;
             skippedTurn = data.skippedTurn;
+            if (otherPlayers[0] === data.playerName && data.skippedTurn === 0) {
+                isTransition1 = !isTransition1;
+            } else if (
+                otherPlayers[1] === data.playerName &&
+                data.skippedTurn === 0
+            ) {
+                isTransition2 = !isTransition2;
+            } else if (
+                otherPlayers[2] === data.playerName &&
+                data.skippedTurn === 0
+            ) {
+                isTransition2 = !isTransition2;
+            }
+
             if (turn) {
                 console.log("wow");
                 if (myCards.length === 0) {
@@ -158,13 +195,55 @@
         input = input.replace(/ /g, "");
         return input == "";
     }
+    const timer = (ms) => new Promise((res) => setTimeout(res, ms));
 
-    let isActive = new Array();
+    async function startGameAnimation() {
+        for (let j = 0; j < 13; j++) {
+            for (let i = 0; i < 4; i++) {
+                if (i === 0) {
+                    y = "30vh";
+                    x = 0;
+                } else if (i === 1) {
+                    y = 0;
+                    x = "-40vw";
+                } else if (i === 2) {
+                    y = "-30vh";
+                    x = 0;
+                } else if (i === 3) {
+                    x = "40vw";
+                    y = 0;
+                }
+                await timer(300);
+                isTransitionMiddle = !isTransitionMiddle;
+            }
+            myCards[j].isShown = true;
+            await timer(200);
+            myCards[j].isAnimated = true;
+        }
+        middleCardShown = false;
+    }
 </script>
 
-<div class={isShown ? "modalShown" : ""} />
+<div class={isShown || winnerIsShown ? "modalShown" : ""} />
+<WinnerBox {players} {winners} {nameArr} {winnerIsShown} />
+<Button
+    on:click={() => {
+        winnerIsShown = !winnerIsShown;
+        console.log(otherPlayers);
+    }}>Winner</Button
+>
 <div class="demoWrapper">
     <div class="game-background">
+        {#key isTransitionMiddle}
+            <div
+                style="position:absolute; transform:translate(-50%,-50%); top:50%;left:50%;   justify-content: center;
+                align-items: center;{middleCardShown
+                    ? 'visibility:visible'
+                    : 'visibility:hidden'}"
+            >
+                <CardBack {x} {y} />
+            </div>
+        {/key}
         <div
             class="modal"
             style={isShown ? "visibility:shown" : "visibility:hidden"}
@@ -183,26 +262,47 @@
 
         <div class={"row-of-cards"}>
             {#each myCards as card, index (card.url)}
-                <input
-                    value={"whatsittoyah"}
-                    type="image"
-                    src={card.url}
-                    alt=""
-                    draggable="false"
-                    class={"card"}
+                <div
+                    class="card2"
+                    style={card.isShown
+                        ? "visibility:visible"
+                        : "visibility:hidden"}
                     class:isSelected={isActive.includes(index)}
-                    on:click={() => {
-                        if (isActive.includes(index)) {
-                            isActive = isActive.filter(
-                                (item) => item !== index
-                            );
-                            myCards = myCards;
-                        } else {
-                            isActive.push(index);
-                            myCards = myCards;
-                        }
-                    }}
-                />
+                >
+                    <input
+                        value={"whatsittoyah"}
+                        type="image"
+                        src={card.url}
+                        alt=""
+                        draggable="false"
+                        class="card front"
+                        class:card-selected={isActive.includes(index)}
+                        style={card.isAnimated
+                            ? "transform: rotateY(-360deg);"
+                            : ""}
+                        on:click={() => {
+                            if (isActive.includes(index)) {
+                                isActive = isActive.filter(
+                                    (item) => item !== index
+                                );
+                                myCards = myCards;
+                            } else {
+                                isActive.push(index);
+                                myCards = myCards;
+                            }
+                        }}
+                    />
+                    <div
+                        class="back"
+                        style={card.isAnimated
+                            ? "transform: rotateY(-180deg);"
+                            : ""}
+                    />
+                </div>
+                <!--                 <div class="card2">
+                    <div class="front"><span>Front</span></div>
+                    <div class="back"><span>Back</span></div>
+                </div> -->
             {/each}
         </div>
 
@@ -294,7 +394,7 @@
             <Button
                 on:click={distributeCards}
                 isVisible={!isStarted}
-                disabled={players.length !== 4 ? true : false}
+                disabled={players.length !== 4 ? false : false}
                 type="startButton">Start Game</Button
             >
         </span>
@@ -315,32 +415,49 @@
             >
         </span>
         <h1>{winner}</h1>
-        <div
-            style="margin: 5vw; /* Adjust margin relative to the viewport width */
-            position: absolute;
-            transform: rotate(100deg);
-             top: 30%; left: 4%;"
-        >
-            {#each { length: 13 } as _, i}
-                <CardBack style={sty[i]} />
-            {/each}
-        </div>
+        {#key isTransition1}
+            <div
+                style="
+                position:absolute; transform:translate(-50%,-50%) rotate(90deg); top:50%;left:5%;  text-align:center"
+                class="tooltip"
+            >
+                <CardBack y="-45vw" x="0" style="margin:auto" />
+                {#if name1 !== "NoName" && name1 !== ''}
+                    <h5 class="name">{name1}</h5>
+                {/if}
+            </div>
+        {/key}
 
-        <div
-            style="margin:5rem; position:absolute;transform:rotate(-100deg);bottom: 30%; right: 2%;"
-        >
-            {#each { length: 13 } as _, i}
-                <CardBack style={sty[i]} />
-            {/each}
-        </div>
+        {#key isTransition2}
+            <div
+                style="
+            position:absolute; transform:translate(-50%,-50%); top:10%;left:50%;  text-align:center"
+                class="tooltip"
+            >
+                {#if name2 !== "NoName" && name2 !== ''}
+                    <h5 class="name">{name2}</h5>
+                {/if}
+                <CardBack y="20vh" x="0" style="margin:auto" />
+            </div>
+        {/key}
 
-        <!--         <div
-        style="margin:5rem; position:absolute;transform:rotate(180deg);top: 3%; right: 50%;"
-    >
-        {#each { length: 13 } as _, i}
-            <CardBack style={sty[i]} />
-        {/each}
-    </div> -->
+        {#key isTransition3}
+            <div
+                style="
+            position: absolute; 
+            transform:translate(-50%,-50%) rotate(-90deg); top:10%;right:0%; 
+            justify-content: center;
+            align-items: center;
+             top: 50%; right: 0%; text-align:center"
+                class="tooltip"
+            >
+                <CardBack y="45vw" x="0" style="margin:auto" />
+                {#if name3 !== "NoName" && name3 !== ''}
+                    <h5 class="name">{name3}</h5>
+                {/if}
+            </div>
+        {/key}
+
         <h1 class={turn ? "glow2" : ""}>{turn ? "Your turn" : ""}</h1>
 
         <PlayerBox
@@ -375,6 +492,13 @@
 </div>
 
 <style>
+    .name {
+        background-color: darkcyan;
+        border-radius: 10px;
+        margin: .5vw 0;
+        padding: 0.5vw 0;
+        font-size: 1vw;
+    }
     .modalShown {
         background-color: rgb(0, 0, 0, 0.5);
         width: 100vw;
@@ -419,29 +543,63 @@
         border-radius: 1vw;
     }
 
+    .card2 {
+        position: relative;
+        width: 5vw;
+        height: 7vw;
+        perspective: 500px;
+        border-radius: 2px;
+        margin-right: 0.5vw;
+    }
+
+    .front,
+    .back {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+
+        transition: transform 1s;
+        backface-visibility: hidden;
+        transform-style: preserve-3d;
+    }
+
+    .back {
+        background-color: var(--cardred);
+        width: 4.7vw;
+        height: 7vw;
+        border-radius: 0.3vw;
+        border: 0.2vw solid #ddd7d2;
+    }
+
     .card {
         margin-right: 0.5vw; /* Use viewport width */
         width: auto;
         height: 7vw;
         border: solid transparent 3px;
         border-radius: 4px;
+        transition: transform 1s;
+        transform-style: preserve-3d;
     }
 
     .card:hover {
         border: #ccff15 solid 3px;
         border-radius: 5px;
     }
+    .card-selected {
+        border: #04d9ff solid 3px;
+        border-radius: 5px;
+    }
 
     .row-of-cards {
-        grid-column: 1;
-        grid-template-columns: repeat(
-            auto-fit,
-            minmax(5vw, 1fr)
-        ); /* Use viewport width */
+        display: grid;
+        grid-template-columns: repeat(13, 1fr);
+        /* Use viewport width */
         bottom: 0;
         position: absolute;
         left: 8vw;
         margin: 0.5vw; /* Use viewport width */
+        height: 9vw;
+        align-items: end;
     }
     .demoWrapper {
         margin: 0.5vw;
@@ -471,13 +629,6 @@
         .playedCards {
             grid-template-columns: 1fr;
         }
-
-        .row-of-cards {
-            grid-template-columns: repeat(
-                auto-fit,
-                minmax(3vw, 1fr)
-            ); /* Use viewport width */
-        }
     }
 
     .glow2 {
@@ -501,7 +652,7 @@
         position: absolute;
 
         top: 10%;
-        right: 50%;
+        left: 20%;
         transform: translate(50%, -50%);
 
         animation: pulsate 1.5s infinite alternate;
