@@ -73,7 +73,10 @@ export default function injectSocketIO(server) {
                     io.to(data.CODE).emit('isStarted', )
                 }) */
         socket.on('winner', (data) => {
-            io.to(data.CODE).emit('winner', data.username);
+            let winnerArr = data.winners;
+            let pos = winnerArr.indexOf(0)
+            winnerArr.splice(pos, 1, data.username);
+            io.to(data.CODE).emit('winner', winnerArr);
         })
 
         socket.on('distributeCards', async (code) => {

@@ -59,23 +59,21 @@
     function fiveCardRank(cards) {
         if (cards.length !== 5) {
             console.log("huhh?");
-
-            return 0;
+            return -1000;
         } else if (allEqualSuits(cards)) {
             if (allSequenced(cards)) {
                 return 5;
             }
             return 2;
         } else if (Math.max(...occurenceArr(cards)) === 4) {
-            return 3;
+            return 4;
         } else if (Math.max(...occurenceArr(cards)) === 3) {
             if (Math.min(...occurenceArr(cards)) === 2) {
-                return 4;
+                return 3;
             }
         } else if (allSequenced(cards)) {
             return 1;
         }
-
         return 0;
     }
 
@@ -87,18 +85,6 @@
     const allEqualSuits = (arr) =>
         arr.every((val) => val.suitRank === arr[0].suitRank);
 
-    /*     const occurences = async (arr) =>
-        Math.max.apply(
-            null,
-            Object.values(
-                arr.reduce(
-                    (acc, o) => (
-                        (acc[o.numberRank] = (acc[o.numberRank] || 0) + 1), acc
-                    ),
-                    {}
-                )
-            )
-        ); */
 
     const occurenceArr = (arr) => {
         let count = new Array();
