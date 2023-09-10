@@ -50,7 +50,7 @@ export default function injectSocketIO(server) {
 
         socket.on('set-your-name', data => {
             nameArr.push(socket.id + data.name)
-            console.log(data.username)
+            //console.log(data.username)
             io.to(data.CODE).emit('set-your-name', {
                 username: data.username,
                 arr: nameArr,
@@ -62,7 +62,7 @@ export default function injectSocketIO(server) {
             players = Array.from(io.sockets.adapter.rooms.get(data.code))
             let currentIndex = players.indexOf(data.user);
             let nextIndex = ++currentIndex % players.length
-            console.log(players)
+            //console.log(players)
             if (data.playedName) {
                 io.to(data.code).emit('playedCards', { cards: data.cards, playerName: data.playedName, turn: players[nextIndex], skippedTurn: data.skippedTurn })
             }
@@ -89,7 +89,7 @@ export default function injectSocketIO(server) {
             })
 
             for (let i = 0; i < Math.min(4, players.length); i++) {
-                console.log(distributedCards)
+                //console.log(distributedCards)
                 let user = io.sockets.sockets.get(players[i])
                 if (user) {
                     user.emit('cards', distributedCards.splice(-13));
