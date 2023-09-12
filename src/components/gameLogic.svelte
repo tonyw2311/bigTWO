@@ -59,7 +59,7 @@
     function fiveCardRank(cards) {
         if (cards.length !== 5) {
             console.log("huhh?");
-            return -1000;
+            return 0;
         } else if (allEqualSuits(cards)) {
             if (allSequenced(cards)) {
                 return 5;

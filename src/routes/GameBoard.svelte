@@ -24,6 +24,7 @@
     let selectedCards;
     let playedCards;
     let playedAnimation = true;
+    let animationFinished = false;
     let playedIsShown = true;
     let playedName = "";
     let players = new Array();
@@ -251,6 +252,7 @@
             await timer(200);
             myCards[j].isAnimated = true;
         }
+        animationFinished = true;
         middleCardShown = false;
     }
     async function showCard(cardType) {
@@ -355,7 +357,7 @@
 
         <span style={"display:grid;bottom:5px;right:5px ;position:absolute "}>
             <Button
-                disabled={!turn}
+                disabled={!turn || !animationFinished}
                 on:click={() => {
                     selectedCards = new Array();
                     if (turn && isActive.length !== 0) {
@@ -458,6 +460,7 @@
         </span>
         <span style="display:grid;position:absolute;bottom:5px;left:5px">
             <Button
+            disabled ={!animationFinished}
                 on:click={() => {
                     myCards.sort(fieldSorter(["suitRank", "numberRank"]));
                     myCards = myCards;
@@ -466,6 +469,7 @@
             >
 
             <Button
+            disabled ={!animationFinished}
                 on:click={() => {
                     myCards.sort(fieldSorter(["numberRank", "suitRank"]));
                     myCards = myCards;
@@ -482,7 +486,7 @@
                 <CardBack
                     y="-45vw"
                     x="0"
-                    r=90
+                    r="90"
                     style={card1IsShown && !winners.includes(otherPlayers[0])
                         ? "margin:auto"
                         : "visibility:hidden"}
@@ -505,7 +509,7 @@
                 <CardBack
                     y="20vh"
                     x="0"
-                    r=0
+                    r="0"
                     style={card2IsShown && !winners.includes(otherPlayers[1])
                         ? "margin:auto"
                         : "visibility:hidden"}
@@ -526,7 +530,7 @@
                 <CardBack
                     y="-45vw"
                     x="0"
-                    r=90
+                    r="90"
                     style={card3IsShown && !winners.includes(otherPlayers[2])
                         ? "margin:auto"
                         : "visibility:hidden"}
