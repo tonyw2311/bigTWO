@@ -45,6 +45,7 @@
     let isTransition3 = true;
     let x = "100";
     let y = "45vw";
+    let r = 0;
     let middleCardShown = true;
     let name1 = "";
     let name2 = "";
@@ -222,17 +223,21 @@
                 if (i === 0) {
                     y = "200%";
                     x = 0;
+                    r = 0;
                 } else if (i === 1) {
                     y = 0;
                     x = "-40vw";
+                    r = 90;
                 } else if (i === 2) {
                     y = "-200%";
                     x = 0;
+                    r = 0;
                 } else if (i === 3) {
                     x = "40vw";
                     y = 0;
+                    r = 90;
                 }
-                //await timer(250);
+                await timer(250);
                 isTransitionMiddle = !isTransitionMiddle;
                 if (i === 1 && j === 0) {
                     showCard("card1");
@@ -243,7 +248,7 @@
                 }
             }
             myCards[j].isShown = true;
-            //await timer(200);
+            await timer(200);
             myCards[j].isAnimated = true;
         }
         middleCardShown = false;
@@ -287,7 +292,7 @@
                     ? 'visibility:visible'
                     : 'visibility:hidden'}"
             >
-                <CardBack {x} {y} />
+                <CardBack {x} {y} {r} />
             </div>
         {/key}
         <div
@@ -438,10 +443,8 @@
                 }}>Play Cards</Button
             >
         </span>
-        <span
-            style="position:absolute;  top: 5px; left: 5px;  z-index:40;"
-        >
-            <Button disabled={!turn} on:click={skipTurn} >Skip Turn</Button>
+        <span style="position:absolute;  top: 5px; left: 5px;  z-index:40;">
+            <Button disabled={!turn} on:click={skipTurn}>Skip Turn</Button>
         </span>
         <span
             style="position:absolute;  top: 50%; left: 30%; transform: translate(50%,-50%); z-index:40;"
@@ -479,6 +482,7 @@
                 <CardBack
                     y="-45vw"
                     x="0"
+                    r=90
                     style={card1IsShown && !winners.includes(otherPlayers[0])
                         ? "margin:auto"
                         : "visibility:hidden"}
@@ -501,6 +505,7 @@
                 <CardBack
                     y="20vh"
                     x="0"
+                    r=0
                     style={card2IsShown && !winners.includes(otherPlayers[1])
                         ? "margin:auto"
                         : "visibility:hidden"}
@@ -521,6 +526,7 @@
                 <CardBack
                     y="-45vw"
                     x="0"
+                    r=90
                     style={card3IsShown && !winners.includes(otherPlayers[2])
                         ? "margin:auto"
                         : "visibility:hidden"}
