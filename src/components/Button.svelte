@@ -18,7 +18,7 @@
         on:mouseenter
         on:mouseleave
         class={"buttonStyle"}
-        style={disabled ? "background-color:gray" : ""}
+        style={disabled ? "background-color:gray; cursor:not-allowed;" : ""}
         {disabled}
     >
         <slot />
@@ -31,7 +31,7 @@
         on:mouseenter
         on:mouseleave
         class={"buttonStyle"}
-        style={isVisible ? (disabled ? "background-color:gray":'') : "visibility:hidden;"}
+        style={isVisible ? (disabled ? "background-color:gray; cursor:not-allowed;":'') : "visibility:hidden;"}
         disabled={!isVisible || disabled}
     >
         <slot />
@@ -46,7 +46,7 @@
         on:mouseleave
         class={"buttonStyle"}
         style={disabled
-            ? "background-color:gray"
+            ? "background-color:gray; cursor:not-allowed;"
             : ""}
         {disabled}
     >
@@ -65,6 +65,8 @@
     min-width: fit-content;
     width: auto; /* Set width to auto for content-based sizing */
     height: auto; /* Set height to auto for content-based sizing */
+    cursor: pointer;
+
 }
 
 

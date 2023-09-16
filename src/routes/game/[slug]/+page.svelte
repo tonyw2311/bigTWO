@@ -5,11 +5,11 @@
     export let data;
     import GameBoard from "../../GameBoard.svelte";
     import { ClipboardOutline } from "svelte-ionicons";
-    import { clickToCopy } from "../../../components/clickToCopy";
     let copyMessage = "Copy to Clipboard";
+    import Button from "../../../components/Button.svelte";
 </script>
 
-<div style="display: inline-flex; align-items: center;">
+<div style="display: inline-flex; align-items: center;margin-top:5%">
     <h5 style="margin: 10px;">Group Code: {data.slug}</h5>
 
     <div class="tooltip">
@@ -17,7 +17,7 @@
             size="20"
             style="cursor: pointer; margin-left: 0px;"
             on:click={() => {
-                clickToCopy("https://bigtwo.pages.dev/game/" + data.slug);
+                navigator.clipboard.writeText("https://bigtwo.pages.dev/game/" + data.slug);
                 copyMessage = "Copied!"
             }}
             on:mouseout={() => {
@@ -26,7 +26,11 @@
         />
         <span class="tooltiptext">{copyMessage}</span>
     </div>
+    <div style='position:absolute;z-index:40;right:3%'>
+        <Button type='link' href=''>Home</Button>
+    </div>
 </div>
+
 
 <GameBoard CODE={data.slug} />
 

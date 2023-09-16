@@ -17,6 +17,10 @@ export default function injectSocketIO(server) {
 
         })
 
+        socket.on('messages', (data) => {
+            io.to(data.CODE).emit('messages',data.messages)
+
+        })
         socket.on("disconnect", () => {
             nameArr = nameArr.filter(e => e.substr(0, 20) !== socket.id)
             console.info(`Client gone [id=${socket.id}]`);

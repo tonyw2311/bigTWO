@@ -11,9 +11,18 @@
     import PlayerBox from "../components/PlayerBox.svelte";
     import { cardComparer, isValid } from "../components/gameLogic.svelte";
     import WinnerBox from "../components/WinnerBox.svelte";
+    import {
+        AlertCircle,
+        ChatboxEllipses,
+        AlertCircleOutline,
+    } from "svelte-ionicons";
+    import ChatBox from "../components/ChatBox.svelte";
     let username = "lol";
     export let CODE;
+    let chatIsShown = false;
+    let newMessage = false;
     let winnerIsShown = false;
+    let messages = new Array();
     let winners = new Array(3);
     for (let i = 0; i < 3; ++i) winners[i] = 0;
     let myCards = new Array();
@@ -57,6 +66,13 @@
 
     onMount(() => {
         io.emit("groupID", CODE);
+
+        io.on('messages',message=>{
+            messages=message;
+            if(!chatIsShown){
+                newMessage = true
+            }
+        })
 
         io.on("isStarted", (gameStarted) => {
             isStarted = gameStarted;
@@ -267,7 +283,27 @@
             card3IsShown = true;
         }
     }
+    function sendMessage(text, username) {
+        messages.push({ text, username });
+        io.emit("messages", {messages,CODE});
+    }
 </script>
+
+<div
+    class="waveTextAnimated playerAmount"
+    style={players.length === 4 ? "visibility:hidden" : ""}
+>
+    <span>W</span><span>a</span><span>i</span><span>t</span><span>i</span><span
+        >n</span
+    ><span>g</span> <span>f</span><span>o</span><span>r</span>
+    <span>{(4 - players.length).toString()}</span>
+    <span>p</span><span>l</span><span>a</span><span>y</span><span>e</span><span
+        >r</span
+    ><span>(s)</span>
+    <span>t</span><span>o</span> <span>j</span><span>o</span><span>i</span><span
+        >n</span
+    ><span>.</span><span>.</span><span>.</span>
+</div>
 
 <div class={isShown || winnerIsShown ? "modalShown" : ""} />
 <WinnerBox
@@ -287,6 +323,32 @@
 
 <div class="demoWrapper">
     <div class="game-background">
+        <ChatBox
+            style="position:absolute; transform:translate(-50%,-50%); bottom: -15%; right:-10%;z-index:50;"
+            isShown={chatIsShown}
+            {nameArr}
+            {username}
+            {messages}
+            {sendMessage}
+        />
+        <ChatboxEllipses
+            size="40"
+            color="var(--box-background)"
+            style={chatIsShown
+                ? "border:1px yellow solid; outline:none;position:absolute; transform:translate(-50%,-50%); bottom:0%;right:7%; z-index:40;box-shadow: 0 0 5px rgba(0, 0, 0, .3);background-color:rgb(54, 53, 100);   padding:10px;border-radius:5px;   cursor:pointer;"
+                : "position:absolute; outline:none;transform:translate(-50%,-50%); bottom:0%;right:7%; z-index:40;box-shadow: 0 0 5px rgba(0, 0, 0, .3);background-color:rgb(54, 53, 100);   padding:10px;border-radius:5px;   cursor:pointer;"}
+            on:click={() => {
+                chatIsShown = !chatIsShown;
+                newMessage = false;
+            }}
+        />
+        <AlertCircleOutline
+            size="20"
+            color="red"
+            style={newMessage
+                ? "outline:none;position:absolute; transform:translate(-50%,-50%); bottom:3.2%;right:8.5%; z-index:40;box-shadow: 0 0 5px rgba(0, 0, 0, .3)  padding:10px;border-radius:5px;   cursor:pointer;"
+                : "display:none"}
+        />
         {#key isTransitionMiddle}
             <div
                 style="position:absolute; transform:translate(-50%,-50%); top:50%;left:50%;   justify-content: center;
@@ -444,23 +506,22 @@
                     }
                 }}>Play Cards</Button
             >
+            <Button disabled={!turn} on:click={skipTurn}>Pass Turn</Button>
         </span>
-        <span style="position:absolute;  top: 5px; left: 5px;  z-index:40;">
-            <Button disabled={!turn} on:click={skipTurn}>Skip Turn</Button>
-        </span>
+
         <span
             style="position:absolute;  top: 50%; left: 30%; transform: translate(50%,-50%); z-index:40;"
         >
             <Button
                 on:click={distributeCards}
                 isVisible={!isStarted}
-                disabled={players.length !== 4 ? false : false}
+                disabled={players.length !== 4 ? true : false}
                 type="startButton">Start Game</Button
             >
         </span>
         <span style="display:grid;position:absolute;bottom:5px;left:5px">
             <Button
-            disabled ={!animationFinished}
+                disabled={!animationFinished}
                 on:click={() => {
                     myCards.sort(fieldSorter(["suitRank", "numberRank"]));
                     myCards = myCards;
@@ -469,7 +530,7 @@
             >
 
             <Button
-            disabled ={!animationFinished}
+                disabled={!animationFinished}
                 on:click={() => {
                     myCards.sort(fieldSorter(["numberRank", "suitRank"]));
                     myCards = myCards;
@@ -593,6 +654,13 @@
 </div>
 
 <style>
+    .playerAmount {
+        position: absolute;
+        left: 50%;
+        top: 12%;
+        transform: translate(-50%, -50%);
+        font-size: 1vw;
+    }
     .name {
         background-color: #212a3e;
         border-radius: 10px;
@@ -765,5 +833,185 @@
                 0 0 10px #bc13fe, 0 0 45px #bc13fe, 0 0 55px #bc13fe,
                 0 0 70px #bc13fe, 0 0 80px #bc13fe;
         }
+    }
+
+    @-webkit-keyframes wave-text {
+        00% {
+            transform: translateY(0em);
+        }
+        60% {
+            transform: translateY(-0.3em);
+        }
+        100% {
+            transform: translateY(0em);
+        }
+    }
+
+    @keyframes wave-text {
+        00% {
+            transform: translateY(0em);
+        }
+        60% {
+            transform: translateY(-0.3em);
+        }
+        100% {
+            transform: translateY(0em);
+        }
+    }
+
+    .waveTextAnimated span {
+        display: inline-block;
+        -webkit-animation: wave-text 2.5s ease-in-out infinite;
+        animation: wave-text 2.5s ease-in-out infinite;
+    }
+    .waveTextAnimated span:nth-of-type(1) {
+        -webkit-animation-delay: 0s;
+        animation-delay: 0s;
+    }
+
+    .waveTextAnimated span:nth-of-type(2) {
+        -webkit-animation-delay: 0.1s;
+        animation-delay: 0.1s;
+    }
+
+    .waveTextAnimated span:nth-of-type(3) {
+        -webkit-animation-delay: 0.2s;
+        animation-delay: 0.2s;
+    }
+
+    /* Continue for spans 4 to 30 with increments of 0.1s */
+    .waveTextAnimated span:nth-of-type(4) {
+        -webkit-animation-delay: 0.3s;
+        animation-delay: 0.3s;
+    }
+
+    .waveTextAnimated span:nth-of-type(5) {
+        -webkit-animation-delay: 0.4s;
+        animation-delay: 0.4s;
+    }
+
+    .waveTextAnimated span:nth-of-type(6) {
+        -webkit-animation-delay: 0.5s;
+        animation-delay: 0.5s;
+    }
+
+    .waveTextAnimated span:nth-of-type(7) {
+        -webkit-animation-delay: 0.6s;
+        animation-delay: 0.6s;
+    }
+
+    .waveTextAnimated span:nth-of-type(8) {
+        -webkit-animation-delay: 0.7s;
+        animation-delay: 0.7s;
+    }
+
+    .waveTextAnimated span:nth-of-type(9) {
+        -webkit-animation-delay: 0.8s;
+        animation-delay: 0.8s;
+    }
+
+    .waveTextAnimated span:nth-of-type(10) {
+        -webkit-animation-delay: 0.9s;
+        animation-delay: 0.9s;
+    }
+
+    .waveTextAnimated span:nth-of-type(11) {
+        -webkit-animation-delay: 1s;
+        animation-delay: 1s;
+    }
+
+    .waveTextAnimated span:nth-of-type(12) {
+        -webkit-animation-delay: 1.1s;
+        animation-delay: 1.1s;
+    }
+
+    .waveTextAnimated span:nth-of-type(13) {
+        -webkit-animation-delay: 1.2s;
+        animation-delay: 1.2s;
+    }
+
+    .waveTextAnimated span:nth-of-type(14) {
+        -webkit-animation-delay: 1.3s;
+        animation-delay: 1.3s;
+    }
+
+    .waveTextAnimated span:nth-of-type(15) {
+        -webkit-animation-delay: 1.4s;
+        animation-delay: 1.4s;
+    }
+
+    .waveTextAnimated span:nth-of-type(16) {
+        -webkit-animation-delay: 1.5s;
+        animation-delay: 1.5s;
+    }
+
+    .waveTextAnimated span:nth-of-type(17) {
+        -webkit-animation-delay: 1.6s;
+        animation-delay: 1.6s;
+    }
+
+    .waveTextAnimated span:nth-of-type(18) {
+        -webkit-animation-delay: 1.7s;
+        animation-delay: 1.7s;
+    }
+
+    .waveTextAnimated span:nth-of-type(19) {
+        -webkit-animation-delay: 1.8s;
+        animation-delay: 1.8s;
+    }
+
+    .waveTextAnimated span:nth-of-type(20) {
+        -webkit-animation-delay: 1.9s;
+        animation-delay: 1.9s;
+    }
+
+    .waveTextAnimated span:nth-of-type(21) {
+        -webkit-animation-delay: 2s;
+        animation-delay: 2s;
+    }
+
+    .waveTextAnimated span:nth-of-type(22) {
+        -webkit-animation-delay: 2.1s;
+        animation-delay: 2.1s;
+    }
+
+    .waveTextAnimated span:nth-of-type(23) {
+        -webkit-animation-delay: 2.2s;
+        animation-delay: 2.2s;
+    }
+
+    .waveTextAnimated span:nth-of-type(24) {
+        -webkit-animation-delay: 2.3s;
+        animation-delay: 2.3s;
+    }
+
+    .waveTextAnimated span:nth-of-type(25) {
+        -webkit-animation-delay: 2.4s;
+        animation-delay: 2.4s;
+    }
+
+    .waveTextAnimated span:nth-of-type(26) {
+        -webkit-animation-delay: 2.5s;
+        animation-delay: 2.5s;
+    }
+
+    .waveTextAnimated span:nth-of-type(27) {
+        -webkit-animation-delay: 2.6s;
+        animation-delay: 2.6s;
+    }
+
+    .waveTextAnimated span:nth-of-type(28) {
+        -webkit-animation-delay: 2.7s;
+        animation-delay: 2.7s;
+    }
+
+    .waveTextAnimated span:nth-of-type(29) {
+        -webkit-animation-delay: 2.8s;
+        animation-delay: 2.8s;
+    }
+
+    .waveTextAnimated span:nth-of-type(30) {
+        -webkit-animation-delay: 2.9s;
+        animation-delay: 2.9s;
     }
 </style>

@@ -3,7 +3,7 @@
 </script>
 
 <div class="app">
-	<a style='margin:0;color:white;text-decoration:none' href='/'>big TWO</a>
+<!-- 	<a style='margin:0;color:white;text-decoration:none' href='/'>big TWO</a> -->
 
 	<main>
 		<slot />
