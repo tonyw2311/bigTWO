@@ -65,14 +65,29 @@
     let card3IsShown = false;
 
     onMount(() => {
+        io.on("disconnected", (data) => {
+            if (players.includes(data.user)) {
+                players = players.filter((e) => e !== data.user);
+                nameArr = data.nameArr;
+                otherPlayers = players.filter((x) => {
+                    if (x === username) {
+                        return false;
+                    }
+                    return true;
+                });
+                name1 = personName(otherPlayers[0]);
+                name2 = personName(otherPlayers[1]);
+                name3 = personName(otherPlayers[2]);
+            }
+        });
         io.emit("groupID", CODE);
 
-        io.on('messages',message=>{
-            messages=message;
-            if(!chatIsShown){
-                newMessage = true
+        io.on("messages", (message) => {
+            messages = message;
+            if (!chatIsShown) {
+                newMessage = true;
             }
-        })
+        });
 
         io.on("isStarted", (gameStarted) => {
             isStarted = gameStarted;
@@ -285,7 +300,7 @@
     }
     function sendMessage(text, username) {
         messages.push({ text, username });
-        io.emit("messages", {messages,CODE});
+        io.emit("messages", { messages, CODE });
     }
 </script>
 
@@ -332,10 +347,10 @@
             {sendMessage}
         />
         <ChatboxEllipses
-            size="40"
+            size="3vw"
             color="var(--box-background)"
             style={chatIsShown
-                ? "border:1px yellow solid; outline:none;position:absolute; transform:translate(-50%,-50%); bottom:0%;right:7%; z-index:40;box-shadow: 0 0 5px rgba(0, 0, 0, .3);background-color:rgb(54, 53, 100);   padding:10px;border-radius:5px;   cursor:pointer;"
+                ? "border:1px yellow solid; outline:none;position:absolute; transform:translate(-50%,-50%); bottom:0vw;right:7vw; z-index:40;box-shadow: 0 0 5px rgba(0, 0, 0, .3);background-color:rgb(54, 53, 100);   padding:10px;border-radius:5px;   cursor:pointer;"
                 : "position:absolute; outline:none;transform:translate(-50%,-50%); bottom:0%;right:7%; z-index:40;box-shadow: 0 0 5px rgba(0, 0, 0, .3);background-color:rgb(54, 53, 100);   padding:10px;border-radius:5px;   cursor:pointer;"}
             on:click={() => {
                 chatIsShown = !chatIsShown;
@@ -343,10 +358,10 @@
             }}
         />
         <AlertCircleOutline
-            size="20"
+            size="1.5vw"
             color="red"
             style={newMessage
-                ? "outline:none;position:absolute; transform:translate(-50%,-50%); bottom:3.2%;right:8.5%; z-index:40;box-shadow: 0 0 5px rgba(0, 0, 0, .3)  padding:10px;border-radius:5px;   cursor:pointer;"
+                ? "outline:none;position:absolute; transform:translate(-50%,-50%); bottom:1.65vw;right:8vw; z-index:40;box-shadow: 0 0 5px rgba(0, 0, 0, .3)  padding:10px;border-radius:5px;   cursor:pointer;"
                 : "display:none"}
         />
         {#key isTransitionMiddle}

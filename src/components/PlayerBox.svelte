@@ -7,19 +7,6 @@
     export let username;
     export let nameArr = new Array();
     export let lessThanFivers;
-    let finalArray = new Array();
-    function filterArray(name) {
-        let i = nameArr.length;
-        while (i > 0) {
-            if (nameArr[i].substr(0, 20) === name) {
-                console.log("whyyy");
-                return true;
-            }
-            i--;
-        }
-        return false;
-    }
-    const waiting = "Waiting for player...";
 </script>
 
 <div class="backgroundBox" {style}>

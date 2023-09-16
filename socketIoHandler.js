@@ -10,11 +10,12 @@ export default function injectSocketIO(server) {
 
     // Event listener for new connections to the main namespace
     io.on('connection', (socket) => {
+
         socket.emit('name', socket.id);
         let userName = [];
+
         io.on("name", (name) => {
             userName = name;
-
         })
 
         socket.on('messages', (data) => {
@@ -24,6 +25,8 @@ export default function injectSocketIO(server) {
         socket.on("disconnect", () => {
             nameArr = nameArr.filter(e => e.substr(0, 20) !== socket.id)
             console.info(`Client gone [id=${socket.id}]`);
+            io.emit('disconnected',{user:socket.id,nameArr});
+
         });
 
         // Event listener for 'groupID' message from a client
