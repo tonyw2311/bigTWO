@@ -59,7 +59,7 @@
     function fiveCardRank(cards) {
         if (cards.length !== 5) {
             console.log("huhh?");
-            return 0;
+            return -1000;
         } else if (allEqualSuits(cards)) {
             if (allSequenced(cards)) {
                 return 5;
@@ -86,6 +86,7 @@
         arr.every((val) => val.suitRank === arr[0].suitRank);
 
 
+
     const occurenceArr = (arr) => {
         let count = new Array();
         for (let i = 0; i < arr.length; i++) {
@@ -101,24 +102,21 @@
     };
 
     const occurenceMax =  (arr) => {
-        var keys = Object.keys(
-            arr.reduce(
-                (acc, o) => (
-                    (acc[o.numberRank] = (acc[o.numberRank] || 0) + 1), acc
-                ),
-                {}
-            )
-        );
-        var min = keys[0]; // ignoring case of empty list for conciseness
-        var max = keys[0];
-        var i;
+        let maxcount = 0;
+        let element_having_max_freq;
+        for (let i = 0; i < arr.length; i++) {
+            let count = 0;
+            for (let j = 0; j < arr.length; j++) {
+                if (arr[i].numberRank == arr[j].numberRank) count++;
+            }
 
-        for (i = 1; i < keys.length; i++) {
-            var value = keys[i];
-            if (arr[value] < arr[min]) min = value;
-            if (arr[value] > arr[max]) max = value;
+            if (count > maxcount) {
+                maxcount = count;
+                element_having_max_freq = arr[i].numberRank;
+            }
         }
-        return max;
+
+        return element_having_max_freq;
     };
 
     const allSequenced = (arr) => {

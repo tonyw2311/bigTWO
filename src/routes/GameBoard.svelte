@@ -12,7 +12,6 @@
     import { cardComparer, isValid } from "../components/gameLogic.svelte";
     import WinnerBox from "../components/WinnerBox.svelte";
     import {
-        AlertCircle,
         ChatboxEllipses,
         AlertCircleOutline,
     } from "svelte-ionicons";
@@ -142,6 +141,8 @@
             }
         });
         io.on("cards", (distributedCards) => {
+            winner = "";
+            lessThanFivers = new Array();
             winnerIsShown = false;
             middleCardShown = true;
             for (let i = 0; i < 3; ++i) winners[i] = 0;
@@ -552,7 +553,7 @@
                 }}>Number Sort</Button
             >
         </span>
-        <h1>{winner}</h1>
+        <h1 style= ' position:absolute; transform:translate(-50%,-50%); top:20%;left:20%;'>{winner}</h1>
         {#key isTransition1}
             <div
                 style="
